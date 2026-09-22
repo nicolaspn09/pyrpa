@@ -51,17 +51,17 @@ def gerar_projeto_rpa(
     # Geração do metadados/fluxo.yaml padrão (atendendo estritamente ao contrato)
     conteudo_fluxo = dedent(f"""
     fluxo:
-        nome: "{nome_projeto}"
-        versao: "1.0.0"
-        passos:
+      nome: "{nome_projeto}"
+      versao: "1.0.0"
+      passos:
         - id: "passo_1"
-            nome: "Extrair Dados"
-            provider: "playwright"
-            target: "application.extracao.ExtrairDadosUseCase"
+          nome: "Extrair Dados"
+          provider: "playwright"
+          target: "application.extracao.ExtrairDadosUseCase"
         - id: "passo_2"
-            nome: "Processar Dados"
-            provider: "pandas"
-            target: "application.processamento.ProcessarDadosUseCase"
+          nome: "Processar Dados"
+          provider: "pandas"
+          target: "application.processamento.ProcessarDadosUseCase"
     """).strip()
     (raiz / "metadados" / "fluxo.yaml").write_text(conteudo_fluxo, encoding="utf-8")
 

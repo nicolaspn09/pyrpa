@@ -34,7 +34,7 @@ def init(
     """
     pasta_destino = destino if destino is not None else Path.cwd() / nome_projeto
 
-    console.print(f"\n[bold blue]🚀 Inicializando projeto RPA:[/bold blue] [green]{nome_projeto}[/green]")
+    console.print(f"\n[bold blue]>> Inicializando projeto RPA:[/bold blue] [green]{nome_projeto}[/green]")
 
     try:
         caminho_final = gerar_projeto_rpa(
@@ -55,7 +55,7 @@ def init(
 
         console.print(tabela)
         console.print(Panel.fit(
-            f"[bold green]✔ Projeto criado com sucesso em:[/bold green]\n{caminho_final}\n\n"
+            f"[bold green][OK] Projeto criado com sucesso em:[/bold green]\n{caminho_final}\n\n"
             f"[yellow]Para começar:[/yellow]\n"
             f"  cd {caminho_final.name}\n"
             f"  python main.py",
@@ -77,7 +77,7 @@ def validate(
     """
     Valida um arquivo de orquestração de fluxo contra o contrato Pydantic do pyrpa.
     """
-    console.print(f"\n[bold blue]🔍 Validando contrato de fluxo:[/bold blue] {caminho}")
+    console.print(f"\n[bold blue]>> Validando contrato de fluxo:[/bold blue] {caminho}")
 
     try:
         esquema = validar_arquivo_fluxo(caminho)
@@ -92,7 +92,7 @@ def validate(
             tabela.add_row(passo.id, passo.nome, passo.provider.value, passo.target)
 
         console.print(tabela)
-        console.print(f"[bold green]✔ Fluxo válido e pronto para execução ou compilação de DAG![/bold green]\n")
+        console.print(f"[bold green][OK] Fluxo válido e pronto para execução ou compilação de DAG![/bold green]\n")
 
     except (FileNotFoundError, FluxoInvalidoException) as exc:
         console.print(Panel(f"[bold red]Erro de Validação:[/bold red]\n{exc}", border_style="red"))

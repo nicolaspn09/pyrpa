@@ -7,7 +7,7 @@
 [![Tests](https://img.shields.io/badge/tests-12%2F12%20passing-success.svg)](#-testes-e-qualidade)
 [![License](https://img.shields.io/badge/license-MIT-informational.svg)](LICENSE)
 
-> **CLI Opinativa para Scaffolding e Gestão de Projetos de Robotic Process Automation (RPA) em Python Corporativo com Clean Architecture e Orquestração Declarativa.**
+> **CLI Opinativa para Gestão de Projetos de Robotic Process Automation (RPA) em Python Corporativo com Clean Architecture e Orquestração Declarativa.**
 
 ---
 

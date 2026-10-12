@@ -60,7 +60,7 @@ def gerar_projeto_rpa(
           target: "application.extracao.ExtrairDadosUseCase"
         - id: "passo_2"
           nome: "Processar Dados"
-          provider: "pandas"q
+          provider: "pandas"
           target: "application.processamento.ProcessarDadosUseCase"
     """).strip()
     (raiz / "metadados" / "fluxo.yaml").write_text(conteudo_fluxo, encoding="utf-8")

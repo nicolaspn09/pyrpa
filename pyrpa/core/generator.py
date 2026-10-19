@@ -53,7 +53,7 @@ def gerar_projeto_rpa(
         if pasta.name in {"domain", "application", "infrastructure", "interfaces"}:
             (pasta / "__init__.py").touch(exist_ok=True)
 
-    # 1. Camada DOMAIN: Entidades de negócio puro
+    # 1. Camada DOMAIN: Entidades de negócio puro e gestão de filas
     conteudo_entities = dedent("""
     from dataclasses import dataclass, field
     from datetime import datetime, timezone
@@ -204,6 +204,20 @@ def gerar_projeto_rpa(
     """).strip()
     (raiz / "infrastructure" / "http_client.py").write_text(conteudo_infra_http, encoding="utf-8")
 
+    conteudo_infra_pdf = dedent("""
+    from pyrpa.infrastructure.pdf import PdfAdapter, PdfExtracaoException
+
+    __all__ = ["PdfAdapter", "PdfExtracaoException"]
+    """).strip()
+    (raiz / "infrastructure" / "pdf.py").write_text(conteudo_infra_pdf, encoding="utf-8")
+
+    conteudo_infra_ai = dedent("""
+    from pyrpa.infrastructure.ai import AiClientAdapter, AiConfig, AiException
+
+    __all__ = ["AiClientAdapter", "AiConfig", "AiException"]
+    """).strip()
+    (raiz / "infrastructure" / "ai.py").write_text(conteudo_infra_ai, encoding="utf-8")
+
     # 4. Geração do metadados/fluxo.yaml padrão
     conteudo_fluxo = dedent(f"""
     fluxo:
@@ -231,6 +245,9 @@ def gerar_projeto_rpa(
     pandas>=2.0.0
     openpyxl>=3.1.0
 
+    # Leitura e Extração de Documentos PDF
+    pypdf>=5.0.0
+
     # Automação Web (descomente os que for utilizar)
     # playwright>=1.40.0
     # selenium>=4.15.0
@@ -238,6 +255,9 @@ def gerar_projeto_rpa(
 
     # Banco de dados corporativo (PostgreSQL, SQL Server, MySQL)
     # sqlalchemy>=2.0.0
+
+    # Inteligência Artificial / LLMs (opcional)
+    # openai>=1.0.0
     """).strip()
     (raiz / "requirements.txt").write_text(conteudo_requirements, encoding="utf-8")
 
@@ -261,6 +281,11 @@ def gerar_projeto_rpa(
     # SMTP_PASSWORD=sua_senha_de_aplicativo
     # SMTP_USE_TLS=true
     # SMTP_FROM=seu_email@empresa.com.br
+
+    # Inteligência Artificial em Automações Cognitivas (OpenAI / Groq / Ollama / DeepSeek)
+    # AI_API_KEY=sua_chave_de_api
+    # AI_MODEL=gpt-4o-mini
+    # AI_BASE_URL=https://api.openai.com/v1
     """).strip()
     (raiz / ".env").write_text(conteudo_env, encoding="utf-8")
 

@@ -9,6 +9,8 @@ class TipoProvider(str, Enum):
     UNDETECTED_CHROMEDRIVER = "undetected_chromedriver"
     PANDAS = "pandas"
     DATABASE = "database"
+    PDF = "pdf"
+    AI = "ai"
     HTTP = "http"
     STORAGE = "storage"
     NOTIFIER = "notifier"

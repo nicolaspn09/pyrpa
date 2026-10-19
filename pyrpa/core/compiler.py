@@ -10,6 +10,26 @@ class CompiladorException(Exception):
     pass
 
 
+def mapear_periodicidade_para_cron(periodicidade: Optional[str]) -> Optional[str]:
+    """
+    Traduz opções amigáveis em expressões cron padrão para o Apache Airflow.
+    """
+    if not periodicidade:
+        return None
+    p = str(periodicidade).strip().lower()
+    if p in {"none", "manual", "sob_demanda", "sob demanda", "1"}:
+        return None
+    if p in {"horario", "horário", "hora", "@hourly", "2"}:
+        return "0 * * * *"
+    if p in {"diario", "diário", "dia", "@daily", "3"}:
+        return "0 8 * * *"
+    if p in {"semanal", "semana", "@weekly", "4"}:
+        return "0 8 * * 1"
+    if p in {"mensal", "mes", "mês", "@monthly", "5"}:
+        return "0 8 1 * *"
+    return str(periodicidade).strip()
+
+
 class AirflowCompiler:
     """
     Compilador declarativo para Apache Airflow (RF05 do TCC).
@@ -21,6 +41,7 @@ class AirflowCompiler:
         self,
         caminho_fluxo: Union[str, Path],
         destino_dag: Optional[Union[str, Path]] = None,
+        schedule: Optional[str] = None,
     ) -> Path:
         caminho = Path(caminho_fluxo).resolve()
         if not caminho.is_file():
@@ -37,6 +58,10 @@ class AirflowCompiler:
             caminho_saida = pasta_dags / f"dag_{fluxo.nome}.py"
 
         caminho_saida.parent.mkdir(parents=True, exist_ok=True)
+
+        cron_expr = mapear_periodicidade_para_cron(schedule)
+        schedule_valor = f'"{cron_expr}"' if cron_expr else "None"
+        descricao_cron = f"Cron: {cron_expr}" if cron_expr else "Execução manual (sob demanda)"
 
         # Gera as funções de wrapper para cada tarefa
         funcoes_tarefas = []
@@ -91,6 +116,7 @@ def {func_name}(**context):
         conteudo_dag = f"""\"\"\"
 DAG gerada automaticamente pelo framework pyrpa (AirflowCompiler - RF05).
 Fluxo: {fluxo.nome} (v{fluxo.versao})
+Periodicidade: {descricao_cron}
 Data de Geração: Automática
 \"\"\"
 from datetime import datetime, timedelta
@@ -113,8 +139,8 @@ default_args = {{
 with DAG(
     dag_id="dag_{fluxo.nome}",
     default_args=default_args,
-    description="Orquestração do robô {fluxo.nome} gerada pelo pyrpa",
-    schedule_interval=None,
+    description="Orquestração do robô {fluxo.nome} ({descricao_cron})",
+    schedule_interval={schedule_valor},
     start_date=datetime(2026, 1, 1),
     catchup=False,
     tags=["pyrpa", "rpa", "clean_architecture"],
@@ -133,7 +159,8 @@ with DAG(
 def compilar_fluxo_airflow(
     caminho_fluxo: Union[str, Path],
     destino_dag: Optional[Union[str, Path]] = None,
+    schedule: Optional[str] = None,
 ) -> Path:
     """Função utilitária para acionamento direto do compilador do Airflow."""
     compilador = AirflowCompiler()
-    return compilador.compilar(caminho_fluxo, destino_dag)
+    return compilador.compilar(caminho_fluxo, destino_dag, schedule=schedule)

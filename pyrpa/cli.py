@@ -1,11 +1,12 @@
 from pathlib import Path
+import sys
 from typing import Optional
 import typer
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from pyrpa.core.compiler import AirflowCompiler, CompiladorException
+from pyrpa.core.compiler import AirflowCompiler, CompiladorException, mapear_periodicidade_para_cron
 from pyrpa.core.generator import gerar_projeto_rpa, GeradorProjetoException
 from pyrpa.core.runner import FluxoRunner
 from pyrpa.core.validator import validar_arquivo_fluxo, FluxoInvalidoException
@@ -162,20 +163,43 @@ def compile_airflow(
         None,
         "--destino", "-o",
         help="Caminho do arquivo DAG a ser gerado (padrão: ./dags/dag_<nome>.py)"
+    ),
+    schedule: Optional[str] = typer.Option(
+        None,
+        "--schedule", "-s",
+        help="Periodicidade de execução cron (ex: 'diario', 'horario', 'semanal', '0 8 * * *', 'manual')"
     )
 ) -> None:
     """
-    Compila o fluxo.yaml para uma DAG executável do Apache Airflow (RF05 do TCC).
+    Compila o fluxo.yaml para uma DAG executável do Apache Airflow com agendamento cron (RF05 do TCC).
     """
     console.print(f"\n[bold blue]>> Compilando fluxo para Apache Airflow:[/bold blue] {caminho}")
 
+    # Pergunta interativamente a periodicidade caso não tenha sido passada por parâmetro
+    if schedule is None and sys.stdin.isatty():
+        console.print("\n[bold cyan]Escolha a periodicidade de execução no Airflow:[/bold cyan]")
+        console.print("  [1] Manual (Sob demanda / sem agendamento)")
+        console.print("  [2] De hora em hora (@hourly)")
+        console.print("  [3] Diário (todos os dias às 08:00)")
+        console.print("  [4] Semanal (toda segunda-feira às 08:00)")
+        console.print("  [5] Mensal (no 1º dia do mês às 08:00)")
+        console.print("  [6] Personalizado (digitar expressão cron)")
+        opcao = typer.prompt("Opção", default="1")
+        if opcao == "6":
+            schedule = typer.prompt("Digite a expressão cron (ex: */15 * * * *)")
+        else:
+            schedule = opcao
+
     try:
         compilador = AirflowCompiler()
-        caminho_dag = compilador.compilar(caminho_fluxo=caminho, destino_dag=destino)
+        caminho_dag = compilador.compilar(caminho_fluxo=caminho, destino_dag=destino, schedule=schedule)
+        cron_resolvido = mapear_periodicidade_para_cron(schedule)
+        info_agenda = f"[yellow]Agendamento:[/yellow] {cron_resolvido}" if cron_resolvido else "[yellow]Agendamento:[/yellow] Manual (None)"
 
         console.print(Panel.fit(
             f"[bold green][OK] DAG do Apache Airflow gerada com sucesso![/bold green]\n\n"
             f"[cyan]Arquivo gerado:[/cyan] {caminho_dag}\n"
+            f"{info_agenda}\n\n"
             f"[yellow]Para publicar no Airflow:[/yellow] Copie este arquivo para a pasta $AIRFLOW_HOME/dags/",
             border_style="green"
         ))

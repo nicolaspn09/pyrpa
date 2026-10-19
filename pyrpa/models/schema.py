@@ -6,7 +6,12 @@ from pydantic import BaseModel, Field, field_validator
 class TipoProvider(str, Enum):
     PLAYWRIGHT = "playwright"
     SELENIUM = "selenium"
+    UNDETECTED_CHROMEDRIVER = "undetected_chromedriver"
     PANDAS = "pandas"
+    DATABASE = "database"
+    HTTP = "http"
+    STORAGE = "storage"
+    NOTIFIER = "notifier"
     CUSTOM = "custom"
 
 

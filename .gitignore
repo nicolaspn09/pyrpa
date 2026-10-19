@@ -4,3 +4,8 @@ __pycache__/
 .venv/
 venv/
 .env
+*.egg-info/
+*.db
+logs/
+downloads/
+relatorios/

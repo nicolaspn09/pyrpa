@@ -35,20 +35,162 @@ def gerar_projeto_rpa(
             "Use a opção de forçar sobrescrita (--forcar) se tiver certeza."
         )
 
-    # Criação das pastas da Clean Architecture
+    # Criação das pastas da Clean Architecture e governança
     pastas = [
         raiz / "domain",
         raiz / "application",
         raiz / "infrastructure",
         raiz / "interfaces",
         raiz / "metadados",
+        raiz / "dags",
+        raiz / "logs",
+        raiz / "relatorios",
     ]
 
     for pasta in pastas:
         pasta.mkdir(parents=True, exist_ok=True)
-        (pasta / "__init__.py").touch(exist_ok=True)
+        if pasta.name in {"domain", "application", "infrastructure", "interfaces"}:
+            (pasta / "__init__.py").touch(exist_ok=True)
 
-    # Geração do metadados/fluxo.yaml padrão (atendendo estritamente ao contrato)
+    # 1. Camada DOMAIN: Entidades de negócio puro
+    conteudo_entities = dedent("""
+    from dataclasses import dataclass, field
+    from datetime import datetime, timezone
+    from typing import Optional
+
+
+    @dataclass
+    class ItemProcessamento:
+        \"\"\"Entidade de negócio representando um item processado pelo robô.\"\"\"
+        id: str
+        descricao: str
+        valor: float
+        status: str = "PENDENTE"
+        data_registro: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    """).strip()
+    (raiz / "domain" / "entities.py").write_text(conteudo_entities, encoding="utf-8")
+
+    # 2. Camada APPLICATION: Casos de uso de exemplo implementando BaseUseCase
+    conteudo_extracao = dedent("""
+    from pyrpa.domain.contracts import BaseUseCase, ContextoExecucao, ResultadoPasso
+    from infrastructure.logger import RPAAuditLogger
+
+
+    class ExtrairDadosUseCase(BaseUseCase):
+        \"\"\"Caso de uso responsável pela coleta e extração de dados do robô.\"\"\"
+
+        def __init__(self) -> None:
+            self.logger = RPAAuditLogger(nome_robo="extracao")
+
+        def executar(self, contexto: ContextoExecucao) -> ResultadoPasso:
+            self.logger.info("Iniciando extração de dados operacionais...")
+
+            dados_coletados = [
+                {"id": "DOC-101", "descricao": "Fatura Serviço Cloud", "valor": 1250.50},
+                {"id": "DOC-102", "descricao": "Licença Software Antigravity", "valor": 890.00},
+                {"id": "DOC-103", "descricao": "Manutenção Servidor Dedicado", "valor": 3400.00},
+            ]
+
+            contexto.definir("dados_extraidos", dados_coletados)
+            self.logger.info(f"Extração concluída com {len(dados_coletados)} registros obtidos.")
+
+            return ResultadoPasso(
+                sucesso=True,
+                mensagem=f"Foram extraídos {len(dados_coletados)} registros com sucesso.",
+                dados={"total_registros": len(dados_coletados)}
+            )
+    """).strip()
+    (raiz / "application" / "extracao.py").write_text(conteudo_extracao, encoding="utf-8")
+
+    conteudo_processamento = dedent("""
+    from pyrpa.domain.contracts import BaseUseCase, ContextoExecucao, ResultadoPasso
+    from infrastructure.database import get_db_session
+    from infrastructure.logger import RPAAuditLogger
+
+
+    class ProcessarDadosUseCase(BaseUseCase):
+        \"\"\"Caso de uso responsável pela validação e gravação dos dados extraídos.\"\"\"
+
+        def __init__(self) -> None:
+            self.logger = RPAAuditLogger(nome_robo="processamento")
+
+        def executar(self, contexto: ContextoExecucao) -> ResultadoPasso:
+            self.logger.info("Iniciando processamento e conciliação dos dados...")
+
+            itens = contexto.obter("dados_extraidos", [])
+            if not itens:
+                return ResultadoPasso(
+                    sucesso=False,
+                    mensagem="Nenhum dado encontrado no contexto para processamento."
+                )
+
+            # Persistência transacional demonstrativa no SQLite local
+            with get_db_session() as session:
+                session.executar(
+                    \"\"\"
+                    CREATE TABLE IF NOT EXISTS registros_processados (
+                        id TEXT PRIMARY KEY,
+                        descricao TEXT,
+                        valor REAL,
+                        data_processamento TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                    \"\"\"
+                )
+                for item in itens:
+                    session.executar(
+                        \"\"\"
+                        INSERT OR REPLACE INTO registros_processados (id, descricao, valor)
+                        VALUES (?, ?, ?)
+                        \"\"\",
+                        (item["id"], item["descricao"], item["valor"])
+                    )
+
+            self.logger.info(f"Processamento e persistência de {len(itens)} itens concluídos com sucesso.")
+            return ResultadoPasso(
+                sucesso=True,
+                mensagem=f"Processados e persistidos {len(itens)} itens.",
+                dados={"itens_processados": len(itens)}
+            )
+    """).strip()
+    (raiz / "application" / "processamento.py").write_text(conteudo_processamento, encoding="utf-8")
+
+    # 3. Camada INFRASTRUCTURE: Adaptadores base injetados no robô
+    conteudo_infra_logger = dedent("""
+    from pyrpa.infrastructure.logger import RPAAuditLogger, JsonEstruturadoFormatter
+
+    __all__ = ["RPAAuditLogger", "JsonEstruturadoFormatter"]
+    """).strip()
+    (raiz / "infrastructure" / "logger.py").write_text(conteudo_infra_logger, encoding="utf-8")
+
+    conteudo_infra_db = dedent("""
+    from pyrpa.infrastructure.database import DatabaseConfig, DatabaseSession, get_db_session
+
+    __all__ = ["DatabaseConfig", "DatabaseSession", "get_db_session"]
+    """).strip()
+    (raiz / "infrastructure" / "database.py").write_text(conteudo_infra_db, encoding="utf-8")
+
+    conteudo_infra_browser = dedent("""
+    from pyrpa.infrastructure.browser import BrowserConfig, BrowserSession, get_browser
+
+    __all__ = ["BrowserConfig", "BrowserSession", "get_browser"]
+    """).strip()
+    (raiz / "infrastructure" / "browser.py").write_text(conteudo_infra_browser, encoding="utf-8")
+
+    conteudo_infra_storage = dedent("""
+    from pyrpa.infrastructure.storage import StorageAdapter
+
+    __all__ = ["StorageAdapter"]
+    """).strip()
+    (raiz / "infrastructure" / "storage.py").write_text(conteudo_infra_storage, encoding="utf-8")
+
+    conteudo_infra_notifier = dedent("""
+    from pyrpa.infrastructure.notifier import NotifierConfig, NotifierAdapter
+
+    __all__ = ["NotifierConfig", "NotifierAdapter"]
+    """).strip()
+    (raiz / "infrastructure" / "notifier.py").write_text(conteudo_infra_notifier, encoding="utf-8")
+
+    # 4. Geração do metadados/fluxo.yaml padrão
     conteudo_fluxo = dedent(f"""
     fluxo:
       nome: "{nome_projeto}"
@@ -65,25 +207,37 @@ def gerar_projeto_rpa(
     """).strip()
     (raiz / "metadados" / "fluxo.yaml").write_text(conteudo_fluxo, encoding="utf-8")
 
-    # Geração do requirements.txt inicial
+    # 5. Geração do requirements.txt inicial
     conteudo_requirements = dedent("""
+    # Núcleo do framework e dependências base
     pyrpa>=0.1.0
-    playwright>=1.40.0
-    pandas>=2.0.0
     python-dotenv>=1.0.0
+
+    # Automação Web (descomente os que for utilizar)
+    # playwright>=1.40.0
+    # selenium>=4.15.0
+    # undetected-chromedriver>=3.5.0
+
+    # Manipulação de Dados e Banco
+    pandas>=2.0.0
+    # sqlalchemy>=2.0.0
     """).strip()
     (raiz / "requirements.txt").write_text(conteudo_requirements, encoding="utf-8")
 
-    # Geração do .env padrão
+    # 6. Geração do .env padrão
     conteudo_env = dedent("""
     # Configurações de Ambiente do Robô
     ENVIRONMENT=development
     LOG_LEVEL=INFO
     HEADLESS=true
+    BROWSER_ENGINE=simulacao
+    BROWSER_TYPE=chrome
+    DB_URL=sqlite:///dados_rpa.db
+    # WEBHOOK_URL=https://webhook.site/seu-endpoint-corporativo
     """).strip()
     (raiz / ".env").write_text(conteudo_env, encoding="utf-8")
 
-    # Geração do .gitignore padrão
+    # 7. Geração do .gitignore padrão
     conteudo_gitignore = dedent("""
     __pycache__/
     *.py[cod]
@@ -91,24 +245,42 @@ def gerar_projeto_rpa(
     .venv/
     logs/
     downloads/
+    relatorios/
+    *.db
     """).strip()
     (raiz / ".gitignore").write_text(conteudo_gitignore, encoding="utf-8")
 
-    # Geração do main.py de entrada
+    # 8. Geração do main.py de entrada com o Runner oficial
     conteudo_main = dedent(f'''
     """
     Ponto de entrada do robô: {nome_projeto}
-    Estruturado com Clean Architecture via framework pyrpa.
+    Estruturado com Clean Architecture e acionado via runner do framework pyrpa.
     """
     from pathlib import Path
+    import sys
+
+    from pyrpa.core.runner import FluxoRunner
     from pyrpa.core.validator import validar_arquivo_fluxo
 
 
     def main() -> None:
-        caminho_fluxo = Path(__file__).parent / "metadados" / "fluxo.yaml"
+        raiz = Path(__file__).resolve().parent
+        if str(raiz) not in sys.path:
+            sys.path.insert(0, str(raiz))
+
+        caminho_fluxo = raiz / "metadados" / "fluxo.yaml"
         esquema = validar_arquivo_fluxo(caminho_fluxo)
         print(f"Iniciando execução do fluxo: {{esquema.fluxo.nome}} (v{{esquema.fluxo.versao}})")
         print(f"Total de etapas registradas: {{len(esquema.fluxo.passos)}}")
+
+        runner = FluxoRunner()
+        resultado = runner.executar(caminho_fluxo, diretorio_projeto=raiz)
+
+        if resultado.sucesso:
+            print(f"\\n[SUCESSO] Robô finalizado com êxito em {{resultado.duracao_total_segundos}}s!")
+        else:
+            print(f"\\n[FALHA] Execução interrompida: {{resultado.erro}}")
+            sys.exit(1)
 
 
     if __name__ == "__main__":

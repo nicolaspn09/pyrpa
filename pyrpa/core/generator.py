@@ -44,6 +44,7 @@ def gerar_projeto_rpa(
         raiz / "metadados",
         raiz / "dags",
         raiz / "logs",
+        raiz / "downloads",
         raiz / "relatorios",
     ]
 
@@ -103,13 +104,15 @@ def gerar_projeto_rpa(
     (raiz / "application" / "extracao.py").write_text(conteudo_extracao, encoding="utf-8")
 
     conteudo_processamento = dedent("""
+    from pathlib import Path
     from pyrpa.domain.contracts import BaseUseCase, ContextoExecucao, ResultadoPasso
     from infrastructure.database import get_db_session
     from infrastructure.logger import RPAAuditLogger
+    from infrastructure.storage import StorageAdapter
 
 
     class ProcessarDadosUseCase(BaseUseCase):
-        \"\"\"Caso de uso responsável pela validação e gravação dos dados extraídos.\"\"\"
+        \"\"\"Caso de uso responsável pela validação, gravação em banco e exportação Excel.\"\"\"
 
         def __init__(self) -> None:
             self.logger = RPAAuditLogger(nome_robo="processamento")
@@ -124,7 +127,7 @@ def gerar_projeto_rpa(
                     mensagem="Nenhum dado encontrado no contexto para processamento."
                 )
 
-            # Persistência transacional demonstrativa no SQLite local
+            # 1. Persistência transacional demonstrativa no SQLite local
             with get_db_session() as session:
                 session.executar(
                     \"\"\"
@@ -145,11 +148,15 @@ def gerar_projeto_rpa(
                         (item["id"], item["descricao"], item["valor"])
                     )
 
-            self.logger.info(f"Processamento e persistência de {len(itens)} itens concluídos com sucesso.")
+            # 2. Exportação demonstrativa para planilha Excel
+            storage = StorageAdapter(Path.cwd())
+            caminho_excel = storage.exportar_excel("relatorio_processamento.xlsx", itens)
+
+            self.logger.info(f"Processamento concluído. Planilha gerada em: {caminho_excel}")
             return ResultadoPasso(
                 sucesso=True,
-                mensagem=f"Processados e persistidos {len(itens)} itens.",
-                dados={"itens_processados": len(itens)}
+                mensagem=f"Processados e exportados {len(itens)} itens para Excel.",
+                dados={"itens_processados": len(itens), "arquivo_excel": str(caminho_excel)}
             )
     """).strip()
     (raiz / "application" / "processamento.py").write_text(conteudo_processamento, encoding="utf-8")
@@ -184,11 +191,18 @@ def gerar_projeto_rpa(
     (raiz / "infrastructure" / "storage.py").write_text(conteudo_infra_storage, encoding="utf-8")
 
     conteudo_infra_notifier = dedent("""
-    from pyrpa.infrastructure.notifier import NotifierConfig, NotifierAdapter
+    from pyrpa.infrastructure.notifier import NotifierConfig, NotifierAdapter, EmailConfig
 
-    __all__ = ["NotifierConfig", "NotifierAdapter"]
+    __all__ = ["NotifierConfig", "NotifierAdapter", "EmailConfig"]
     """).strip()
     (raiz / "infrastructure" / "notifier.py").write_text(conteudo_infra_notifier, encoding="utf-8")
+
+    conteudo_infra_http = dedent("""
+    from pyrpa.infrastructure.http_client import HttpClientAdapter, HttpResponse
+
+    __all__ = ["HttpClientAdapter", "HttpResponse"]
+    """).strip()
+    (raiz / "infrastructure" / "http_client.py").write_text(conteudo_infra_http, encoding="utf-8")
 
     # 4. Geração do metadados/fluxo.yaml padrão
     conteudo_fluxo = dedent(f"""
@@ -213,13 +227,16 @@ def gerar_projeto_rpa(
     pyrpa>=0.1.0
     python-dotenv>=1.0.0
 
+    # Manipulação de Dados e Planilhas Excel
+    pandas>=2.0.0
+    openpyxl>=3.1.0
+
     # Automação Web (descomente os que for utilizar)
     # playwright>=1.40.0
     # selenium>=4.15.0
     # undetected-chromedriver>=3.5.0
 
-    # Manipulação de Dados e Banco
-    pandas>=2.0.0
+    # Banco de dados corporativo (PostgreSQL, SQL Server, MySQL)
     # sqlalchemy>=2.0.0
     """).strip()
     (raiz / "requirements.txt").write_text(conteudo_requirements, encoding="utf-8")
@@ -233,7 +250,17 @@ def gerar_projeto_rpa(
     BROWSER_ENGINE=simulacao
     BROWSER_TYPE=chrome
     DB_URL=sqlite:///dados_rpa.db
+
+    # Disparo de Alertas e Notificações (Webhooks Microsoft Teams / Slack)
     # WEBHOOK_URL=https://webhook.site/seu-endpoint-corporativo
+
+    # Disparo de E-mails com Anexos (SMTP Corporativo / Outlook / Gmail)
+    # SMTP_HOST=smtp.office365.com
+    # SMTP_PORT=587
+    # SMTP_USER=seu_email@empresa.com.br
+    # SMTP_PASSWORD=sua_senha_de_aplicativo
+    # SMTP_USE_TLS=true
+    # SMTP_FROM=seu_email@empresa.com.br
     """).strip()
     (raiz / ".env").write_text(conteudo_env, encoding="utf-8")
 

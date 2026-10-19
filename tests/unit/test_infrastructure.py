@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 import pytest
 
 from pyrpa.infrastructure.browser import (
@@ -13,8 +14,9 @@ from pyrpa.infrastructure.database import (
     DatabaseConfig,
     get_db_session,
 )
+from pyrpa.infrastructure.http_client import HttpClientAdapter
 from pyrpa.infrastructure.logger import RPAAuditLogger
-from pyrpa.infrastructure.notifier import NotifierAdapter, NotifierConfig
+from pyrpa.infrastructure.notifier import EmailConfig, NotifierAdapter, NotifierConfig
 from pyrpa.infrastructure.storage import StorageAdapter
 
 
@@ -59,12 +61,10 @@ def test_database_session_deve_fazer_rollback_em_erro(tmp_path: Path):
     with pytest.raises(DatabaseAdapterException):
         with get_db_session(config) as session:
             session.executar("INSERT INTO contas (id, saldo) VALUES (?, ?)", ("c2", 200.0))
-            # Força erro de sintaxe SQL para provocar rollback da transação
             session.executar("INSTRUCAO_INVALIDA_SQL")
 
     with get_db_session(config) as session:
         registros = session.buscar_todos("SELECT * FROM contas")
-        # O registro c2 não deve existir devido ao rollback
         assert len(registros) == 1
         assert registros[0]["id"] == "c1"
 
@@ -102,9 +102,93 @@ def test_storage_adapter_deve_salvar_e_ler_json_e_csv(tmp_path: Path):
     ]
     caminho_csv = storage.salvar_csv("dados.csv", registros)
     assert caminho_csv.is_file()
+    lidos_csv = storage.ler_csv("dados.csv")
+    assert len(lidos_csv) == 2
+    assert lidos_csv[0]["item"] == "A"
+
+
+def test_storage_adapter_exportar_e_ler_excel(tmp_path: Path):
+    storage = StorageAdapter(tmp_path)
+    registros = [
+        {"codigo": "P01", "produto": "Teclado Mecânico", "preco": 350.0},
+        {"codigo": "P02", "produto": "Monitor 27 pol", "preco": 1400.0},
+    ]
+
+    caminho_excel = storage.exportar_excel("produtos.xlsx", registros)
+    assert caminho_excel.is_file()
+
+    linhas = storage.ler_excel("produtos.xlsx")
+    assert len(linhas) == 2
+    assert linhas[0]["codigo"] == "P01"
+    assert linhas[1]["preco"] == 1400.0
+
+    # Leitor Universal com detecção automática de extensão
+    lidos_universal = storage.ler_dados("produtos.xlsx")
+    assert len(lidos_universal) == 2
+
+
+def test_storage_adapter_zip_compactar_e_descompactar(tmp_path: Path):
+    storage = StorageAdapter(tmp_path)
+
+    pasta_arquivos = tmp_path / "arquivos_teste"
+    pasta_arquivos.mkdir()
+    (pasta_arquivos / "doc1.txt").write_text("conteudo 1", encoding="utf-8")
+    (pasta_arquivos / "doc2.txt").write_text("conteudo 2", encoding="utf-8")
+
+    caminho_zip = storage.compactar_pasta(pasta_arquivos, "pacote.zip")
+    assert caminho_zip.is_file()
+
+    pasta_extraida = storage.descompactar_zip(caminho_zip)
+    assert (pasta_extraida / "doc1.txt").is_file()
+    assert (pasta_extraida / "doc2.txt").is_file()
 
 
 def test_notifier_adapter_silencioso_quando_sem_webhook():
     notifier = NotifierAdapter(NotifierConfig(webhook_url=None))
     resultado = notifier.enviar_alerta_webhook("Alerta", "Robô finalizou")
     assert resultado is False
+
+
+def test_notifier_adapter_email_silencioso_sem_smtp():
+    notifier = NotifierAdapter(NotifierConfig(email=EmailConfig(smtp_host=None)))
+    resultado = notifier.enviar_email("destinatario@empresa.com", "Assunto", "<b>Corpo</b>")
+    assert resultado is False
+
+
+def test_notifier_adapter_email_envio_com_mock(tmp_path: Path):
+    cfg = NotifierConfig(
+        email=EmailConfig(
+            smtp_host="smtp.empresa.com",
+            smtp_port=587,
+            smtp_user="bot@empresa.com",
+            smtp_password="senha",
+            smtp_use_tls=True,
+        )
+    )
+    notifier = NotifierAdapter(cfg)
+
+    anexo = tmp_path / "planilha.xlsx"
+    anexo.write_text("dados fake", encoding="utf-8")
+
+    with patch("smtplib.SMTP") as mock_smtp_cls:
+        mock_instance = MagicMock()
+        mock_smtp_cls.return_value.__enter__.return_value = mock_instance
+
+        sucesso = notifier.enviar_email(
+            destinatarios=["gestor@empresa.com"],
+            assunto="Relatório de Faturamento RPA",
+            corpo_html="<p>Segue relatório em anexo.</p>",
+            anexos=[anexo],
+        )
+
+        assert sucesso is True
+        mock_instance.starttls.assert_called_once()
+        mock_instance.login.assert_called_once_with("bot@empresa.com", "senha")
+        mock_instance.sendmail.assert_called_once()
+
+
+def test_http_client_adapter_consulta():
+    client = HttpClientAdapter(timeout_padrao=5)
+    # Teste com URL inexistente tratada com erro de conexão
+    with pytest.raises(ConnectionError):
+        client.get("http://localhost:59999/api/inexistente", timeout=1)

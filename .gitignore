@@ -6,6 +6,8 @@ venv/
 .env
 *.egg-info/
 *.db
+*.docx
+*.pdf
 logs/
 downloads/
 relatorios/

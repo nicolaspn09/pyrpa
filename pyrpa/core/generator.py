@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 from textwrap import dedent
+from typing import List, Optional, Set, Union
 
 
 class GeradorProjetoException(Exception):
@@ -8,10 +9,20 @@ class GeradorProjetoException(Exception):
     pass
 
 
+def normalizar_modulos(modulos: Optional[Union[str, List[str]]]) -> Set[str]:
+    """Interpreta os módulos informados e retorna um conjunto padronizado."""
+    if not modulos or modulos in ("completo", "all", "1"):
+        return {"web", "banco", "excel", "pdf", "ia", "email"}
+    if isinstance(modulos, str):
+        return {m.strip().lower() for m in modulos.split(",") if m.strip()}
+    return {str(m).strip().lower() for m in modulos if m}
+
+
 def gerar_projeto_rpa(
     nome_projeto: str,
     destino: Path,
-    forcar: bool = False
+    forcar: bool = False,
+    modulos: Optional[Union[str, List[str]]] = None,
 ) -> Path:
     """
     Cria a árvore de diretórios e arquivos de um projeto RPA seguindo Clean Architecture.
@@ -19,6 +30,7 @@ def gerar_projeto_rpa(
     :param nome_projeto: Identificador do projeto (ex: robo_faturamento)
     :param destino: Caminho onde o projeto será criado
     :param forcar: Se True, permite sobrescrever diretório não vazio
+    :param modulos: Lista ou string de módulos selecionados (ex: 'web,banco', 'completo')
     :return: Caminho do diretório raiz gerado
     """
     if not re.match(r"^[a-zA-Z0-9_-]+$", nome_projeto):
@@ -34,6 +46,8 @@ def gerar_projeto_rpa(
             f"O diretório de destino '{raiz}' já existe e não está vazio. "
             "Use a opção de forçar sobrescrita (--forcar) se tiver certeza."
         )
+
+    mods_selecionados = normalizar_modulos(modulos)
 
     # Criação das pastas da Clean Architecture e governança
     pastas = [
@@ -218,7 +232,7 @@ def gerar_projeto_rpa(
     """).strip()
     (raiz / "infrastructure" / "ai.py").write_text(conteudo_infra_ai, encoding="utf-8")
 
-    # 4. Geração do metadados/fluxo.yaml padrão
+    # 4. Geração do metadados/fluxo.yaml padrão (atendendo estritamente ao contrato)
     conteudo_fluxo = dedent(f"""
     fluxo:
       nome: "{nome_projeto}"
@@ -236,7 +250,7 @@ def gerar_projeto_rpa(
     (raiz / "metadados" / "fluxo.yaml").write_text(conteudo_fluxo, encoding="utf-8")
 
     # 5. Geração do requirements.txt inicial
-    conteudo_requirements = dedent("""
+    conteudo_requirements = dedent(f"""
     # Núcleo do framework e dependências base
     pyrpa>=0.1.0
     python-dotenv>=1.0.0

@@ -19,20 +19,30 @@ O **`pyrpa`** é um framework opinativo em Python (>= 3.11) projetado para resol
 
 ---
 
-## 2. Guia de Comandos da CLI
+## 2. Guia de Comandos e Opções da CLI
 
-A CLI do `pyrpa` foi desenhada para ser intuitiva, rápida e totalmente em português.
+A CLI do `pyrpa` foi desenhada para ser intuitiva, rápida e totalmente em português. Ela suporta tanto subcomandos diretos quanto flags com traço duplo (`--`), atendendo a diferentes preferências de digitação.
 
-### 2.1. `pyrpa info`
+### 2.0. Flags Globais e Atalhos
+* `pyrpa --version` ou `pyrpa -v`: Exibe a versão instalada do framework.
+* `pyrpa --help`: Exibe a lista completa de comandos e opções disponíveis.
+* `pyrpa --info`: Atalho para abrir o catálogo interativo de conectores e módulos.
+* `pyrpa --doctor`: Atalho para rodar a varredura de saúde do ambiente.
+
+---
+
+### 2.1. `pyrpa info` (ou `pyrpa --info`)
 Exibe o catálogo interativo de todos os conectores disponíveis, tecnologias integradas, casos de uso corporativos e tabela rápida de comandos.
 
 ```bash
 pyrpa info
+# ou
+pyrpa --info
 ```
 
 ---
 
-### 2.2. `pyrpa doctor`
+### 2.2. `pyrpa doctor` (ou `pyrpa --doctor`)
 Realiza uma varredura completa na máquina e no ambiente virtual do Python, verificando:
 - Versão do interpretador Python (>= 3.11).
 - Presença dos binários de navegadores instalados no host (Google Chrome, Microsoft Edge, Mozilla Firefox).
@@ -42,6 +52,8 @@ Realiza uma varredura completa na máquina e no ambiente virtual do Python, veri
 
 ```bash
 pyrpa doctor
+# ou
+pyrpa --doctor
 ```
 
 ---
@@ -154,7 +166,11 @@ Periodicidades reconhecidas:
 
 ---
 
-## 3. Catálogo de Conectores e Infraestrutura
+### 2.8. Assistente Inteligente de Navegação de Pastas
+Se qualquer comando de execução, validação ou compilação for acionado de fora da pasta do robô (por exemplo, na pasta pai `Downloads` ou em uma pasta raiz corporativa):
+1. O `pyrpa` **não trava** com um erro genérico.
+2. Ele varre o diretório atual, identifica os robôs existentes e sugere o comando exato de entrada (`cd <nome_do_robo>`).
+3. Também sugere a linha de comando alternativa apontando diretamente para o caminho relativo.
 
 Todos os conectores de infraestrutura foram criados seguindo o princípio da **Programação Defensiva** e gerenciamento estrito de recursos:
 

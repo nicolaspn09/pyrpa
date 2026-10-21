@@ -21,6 +21,110 @@ app = typer.Typer(
 console = Console()
 
 
+def resolver_caminho_fluxo(caminho_informado: Path, operacao: str = "Validação") -> Path:
+    """
+    Verifica a existência do arquivo de fluxo. Se não existir no caminho informado,
+    inspeciona o diretório atual em busca de subpastas de robôs pyrpa e orienta
+    o desenvolvedor de forma amigável com comandos de navegação prontos.
+    """
+    if caminho_informado.is_file():
+        return caminho_informado
+
+    pastas_robos = []
+    try:
+        for item in Path.cwd().iterdir():
+            if item.is_dir() and (item / "metadados" / "fluxo.yaml").is_file():
+                pastas_robos.append(item.name)
+    except Exception:
+        pass
+
+    caminho_absoluto = caminho_informado.resolve()
+    mensagem = f"Arquivo de fluxo não encontrado no caminho:\n[yellow]{caminho_absoluto}[/yellow]\n\n"
+
+    comando_op = operacao.lower()
+    if comando_op == "compilação":
+        comando_op = "compile"
+    elif comando_op == "execução":
+        comando_op = "run"
+    elif comando_op == "validação":
+        comando_op = "validate"
+
+    if pastas_robos:
+        primeiro = pastas_robos[0]
+        lista_robos = ", ".join(f"'{r}'" for r in pastas_robos)
+        mensagem += (
+            f"[bold green]>> Dica de Navegação:[/bold green]\n"
+            f"Detectamos o(s) seguinte(s) robô(s) nesta pasta: [bold cyan]{lista_robos}[/bold cyan]!\n"
+            f"Para utilizá-lo, entre na pasta do projeto primeiro:\n"
+            f"  [bold yellow]cd {primeiro}[/bold yellow]\n"
+            f"  [bold yellow]pyrpa {comando_op}[/bold yellow]\n\n"
+            f"Ou aponte diretamente para o arquivo:\n"
+            f"  [bold yellow]pyrpa {comando_op} {primeiro}/metadados/fluxo.yaml[/bold yellow]"
+        )
+    else:
+        mensagem += (
+            "[bold yellow]Dica:[/bold yellow] Certifique-se de estar dentro da pasta do robô "
+            f"ou inicialize um novo projeto com: [bold cyan]pyrpa init <nome_do_projeto>[/bold cyan]"
+        )
+
+    console.print(Panel(mensagem, title=f"[bold red]Erro de {operacao}[/bold red]", border_style="red"))
+    raise typer.Exit(code=1)
+
+
+@app.callback(invoke_without_command=True)
+def main(
+    ctx: typer.Context,
+    version: bool = typer.Option(
+        False, "--version", "-v",
+        help="Exibe a versão instalada do pyrpa."
+    ),
+    info_flag: bool = typer.Option(
+        False, "--info",
+        help="Exibe o catálogo completo de conectores e guia rápido."
+    ),
+    doctor_flag: bool = typer.Option(
+        False, "--doctor",
+        help="Executa diagnóstico de integridade do ambiente e navegadores."
+    ),
+    validate_flag: bool = typer.Option(
+        False, "--validate",
+        help="Valida o fluxo.yaml do projeto atual."
+    ),
+    run_flag: bool = typer.Option(
+        False, "--run",
+        help="Executa o fluxo do projeto atual."
+    ),
+    compile_flag: bool = typer.Option(
+        False, "--compile",
+        help="Compila o fluxo do projeto atual para Apache Airflow."
+    ),
+) -> None:
+    """
+    pyrpa - Framework de Scaffolding e Orquestração Declarativa para RPA em Clean Architecture.
+    """
+    if ctx.invoked_subcommand is None:
+        if version:
+            console.print("[bold cyan]pyrpa[/bold cyan] versão [bold green]0.1.0[/bold green]")
+            raise typer.Exit()
+        if info_flag:
+            info()
+            raise typer.Exit()
+        if doctor_flag:
+            doctor(destino=None)
+            raise typer.Exit()
+        if validate_flag:
+            validate(caminho=Path("metadados/fluxo.yaml"))
+            raise typer.Exit()
+        if run_flag:
+            run(caminho=Path("metadados/fluxo.yaml"))
+            raise typer.Exit()
+        if compile_flag:
+            compile_airflow(caminho=Path("metadados/fluxo.yaml"))
+            raise typer.Exit()
+        console.print(ctx.get_help())
+        raise typer.Exit()
+
+
 @app.command(name="info")
 def info() -> None:
     """
@@ -305,6 +409,7 @@ def validate(
     """
     Valida um arquivo de orquestração de fluxo contra o contrato Pydantic do pyrpa.
     """
+    caminho = resolver_caminho_fluxo(caminho, operacao="Validação")
     console.print(f"\n[bold blue]>> Validando contrato de fluxo:[/bold blue] {caminho}")
 
     try:
@@ -337,6 +442,7 @@ def run(
     """
     Executa localmente o fluxo do robô conforme definido no fluxo.yaml.
     """
+    caminho = resolver_caminho_fluxo(caminho, operacao="Execução")
     console.print(f"\n[bold blue]>> Executando fluxo RPA:[/bold blue] {caminho}")
 
     try:
@@ -398,6 +504,7 @@ def compile_airflow(
     """
     Compila o fluxo.yaml para uma DAG executável do Apache Airflow com agendamento cron (RF05 do TCC).
     """
+    caminho = resolver_caminho_fluxo(caminho, operacao="Compilação")
     console.print(f"\n[bold blue]>> Compilando fluxo para Apache Airflow:[/bold blue] {caminho}")
 
     if schedule is None and sys.stdin.isatty():

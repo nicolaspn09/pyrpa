@@ -1,8 +1,23 @@
 from pathlib import Path
+import os
 from typer.testing import CliRunner
 from pyrpa.cli import app
 
 runner = CliRunner()
+
+
+def test_cli_version():
+    resultado = runner.invoke(app, ["--version"])
+    assert resultado.exit_code == 0
+    assert "pyrpa" in resultado.stdout
+    assert "0.1.0" in resultado.stdout
+
+
+def test_cli_version_curto():
+    resultado = runner.invoke(app, ["-v"])
+    assert resultado.exit_code == 0
+    assert "pyrpa" in resultado.stdout
+    assert "0.1.0" in resultado.stdout
 
 
 def test_cli_info():
@@ -13,11 +28,24 @@ def test_cli_info():
     assert "Guia Rápido de Comandos da CLI" in resultado.stdout
 
 
+def test_cli_flag_info():
+    resultado = runner.invoke(app, ["--info"])
+    assert resultado.exit_code == 0
+    assert "pyrpa - Framework de Engenharia de Software" in resultado.stdout
+    assert "Catálogo de Conectores e Módulos Suportados" in resultado.stdout
+
+
 def test_cli_doctor():
     resultado = runner.invoke(app, ["doctor"])
     assert resultado.exit_code == 0
     assert "Diagnóstico de Ambiente do Sistema" in resultado.stdout
     assert "Versão do Python" in resultado.stdout
+
+
+def test_cli_flag_doctor():
+    resultado = runner.invoke(app, ["--doctor"])
+    assert resultado.exit_code == 0
+    assert "Diagnóstico de Ambiente do Sistema" in resultado.stdout
 
 
 def test_cli_init_deve_gerar_projeto_com_sucesso(tmp_path: Path):
@@ -78,6 +106,22 @@ def test_cli_validate_deve_falhar_com_arquivo_inexistente(tmp_path: Path):
     resultado = runner.invoke(app, ["validate", str(tmp_path / "inexistente.yaml")])
     assert resultado.exit_code == 1
     assert "Arquivo de fluxo não encontrado" in resultado.stdout
+
+
+def test_cli_dica_navegacao_quando_fora_da_pasta(tmp_path: Path, monkeypatch):
+    # Cria robô em uma subpasta
+    destino = tmp_path / "robo_vizinho"
+    runner.invoke(app, ["init", "robo_vizinho", "--destino", str(destino)])
+
+    # Muda o diretório atual para a pasta pai (onde o robô é subpasta)
+    monkeypatch.chdir(tmp_path)
+
+    # Executa validate sem argumentos (padrão: metadados/fluxo.yaml)
+    resultado = runner.invoke(app, ["validate"])
+    assert resultado.exit_code == 1
+    assert "Dica de Navegação" in resultado.stdout
+    assert "robo_vizinho" in resultado.stdout
+    assert "cd robo_vizinho" in resultado.stdout
 
 
 def test_cli_run_deve_executar_fluxo_com_sucesso(tmp_path: Path):

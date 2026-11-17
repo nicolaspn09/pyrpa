@@ -56,6 +56,15 @@ class FluxoRunner:
         if str_raiz not in sys.path:
             sys.path.insert(0, str_raiz)
 
+        # Carrega variáveis de ambiente do .env específico do robô antes de carregar/executar UseCases
+        caminho_env = raiz / ".env"
+        if caminho_env.is_file():
+            try:
+                from dotenv import load_dotenv
+                load_dotenv(dotenv_path=caminho_env, override=True)
+            except ImportError:
+                pass
+
         # Evita conflitos de cache do sys.modules quando múltiplos projetos ou testes rodam no mesmo processo
         for mod_chave in list(sys.modules.keys()):
             if mod_chave == "application" or mod_chave.startswith("application."):

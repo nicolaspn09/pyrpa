@@ -71,11 +71,20 @@ def executar_diagnostico_doctor(diretorio_atual: Optional[Path] = None) -> List[
             detalhes=f"Python {versao_str} (Requer Python >= 3.11)"
         ))
 
+    sistema_nome = platform.system()
+    versao_so = platform.release()
+    if sistema_nome == "Windows" and versao_so == "10":
+        try:
+            if sys.getwindowsversion().build >= 22000:
+                versao_so = "11"
+        except Exception:
+            pass
+
     diagnosticos.append(ItemDiagnostico(
         categoria="Sistema Base",
         item="Sistema Operacional",
         status="OK",
-        detalhes=f"{platform.system()} {platform.release()} ({platform.architecture()[0]})"
+        detalhes=f"{sistema_nome} {versao_so} ({platform.architecture()[0]})"
     ))
 
     # 2. Navegadores Instalados no Host

@@ -28,6 +28,9 @@ A CLI do `pyrpa` foi desenhada para ser intuitiva, rápida e totalmente em portu
 * `pyrpa --help`: Exibe a lista completa de comandos e opções disponíveis.
 * `pyrpa --info`: Atalho para abrir o catálogo interativo de conectores e módulos.
 * `pyrpa --doctor`: Atalho para rodar a varredura de saúde do ambiente.
+* `pyrpa --validate`: Atalho para validar o `metadados/fluxo.yaml` do projeto atual.
+* `pyrpa --run`: Atalho para executar o fluxo do projeto atual.
+* `pyrpa --compile`: Atalho para compilar o fluxo do projeto atual para Apache Airflow.
 
 ---
 
@@ -137,6 +140,7 @@ pyrpa run metadados/fluxo.yaml
 ```
 
 Recursos do motor de execução (`FluxoRunner`):
+- Carregamento automático das variáveis do arquivo `.env` específico do robô antes da execução.
 - Instanciação dinâmica dos UseCases via `importlib`.
 - Objeto de estado compartilhado (`ContextoExecucao`) que trafega dados entre etapas de forma desacoplada.
 - Cronometragem detalhada de cada etapa e exibição de resumo visual via Rich.
@@ -172,16 +176,21 @@ Se qualquer comando de execução, validação ou compilação for acionado de f
 2. Ele varre o diretório atual, identifica os robôs existentes e sugere o comando exato de entrada (`cd <nome_do_robo>`).
 3. Também sugere a linha de comando alternativa apontando diretamente para o caminho relativo.
 
+---
+
+## 3. Conectores e Adaptadores de Infraestrutura
+
 Todos os conectores de infraestrutura foram criados seguindo o princípio da **Programação Defensiva** e gerenciamento estrito de recursos:
 
 | Conector | Arquivo Base | Principais Recursos |
 | :--- | :--- | :--- |
-| **Web** | `infrastructure/browser.py` | Suporte a Playwright, Selenium e Undetected-Chromedriver. Context manager `with get_browser() as browser:` com encerramento forçado do processo ao sair do bloco. |
+| **Web** | `infrastructure/browser.py` | Suporte a Playwright, Selenium, Undetected-Chromedriver e modo Simulação (`BROWSER_ENGINE`). Context manager `with get_browser() as browser:` com encerramento forçado do processo ao sair do bloco. |
 | **Banco de Dados** | `infrastructure/database.py` | Conexões relacionais para PostgreSQL, SQLite e SQL Server. Gerenciador de contexto `with get_db_session() as session:` com rollback automático em caso de exceção. |
 | **Planilhas & Arquivos** | `infrastructure/storage.py` | Leitor universal de arquivos (Excel, CSV, JSON), exportação de relatórios `.xlsx` estilizados via Pandas/OpenPyXL e compressão ZIP. |
 | **PDF** | `infrastructure/pdf.py` | Extração de texto por páginas e expressões regulares nativas para detecção de CNPJs, CPFs, datas, valores monetários e linha digitável de boletos. |
 | **Inteligência Artificial** | `infrastructure/ai.py` | Cliente agnóstico para LLMs (OpenAI, Groq, Ollama) com fallback inteligente (simulação controlada) para desenvolvimento e testes sem quebrar a pipeline. |
 | **Notificações** | `infrastructure/notifier.py` | Envio de e-mails corporativos via SMTP autenticado com suporte a HTML e anexos, além de Webhooks para Microsoft Teams e Slack. |
+| **Cliente HTTP / APIs** | `infrastructure/http_client.py` | Cliente encapsulado com timeout e tratamento padronizado de respostas para consumo de APIs REST. |
 | **Auditoria e Logs** | `infrastructure/logger.py` | Logger JSON estruturado e formatado no terminal, registrando timestamps, etapas, status e metadados para conformidade de governança corporativa. |
 
 ---
@@ -210,7 +219,8 @@ meu_robo/
 │   └── fluxo.yaml               <- Contrato declarativo de orquestração
 ├── dags/                        <- Saída da compilação para o Airflow
 │   └── dag_meu_robo.py
-├── .env.example                 <- Modelo seguro de variáveis de ambiente
+├── .env                         <- Variáveis de ambiente locais (protegidas no .gitignore)
+├── .gitignore                   <- Bloqueio contra vazamento de credenciais e bancos locais
 ├── requirements.txt             <- Dependências do projeto
 └── main.py                      <- Ponto de entrada de execução local
 ```

@@ -60,3 +60,30 @@ def test_runner_deve_compartilhar_dados_entre_passos_via_contexto(tmp_path: Path
     assert ctx.contem("dados_extraidos") is True
     dados = ctx.obter("dados_extraidos")
     assert len(dados) == 3
+
+
+def test_runner_deve_carregar_variaveis_do_dotenv_do_projeto(tmp_path: Path, monkeypatch):
+    import os
+
+    destino = tmp_path / "robo_dotenv"
+    gerar_projeto_rpa("robo_dotenv", destino=destino)
+
+    # Garante ambiente limpo antes da execução e configura valor customizado no .env
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
+    monkeypatch.delenv("DB_URL", raising=False)
+    monkeypatch.delenv("HEADLESS", raising=False)
+    monkeypatch.delenv("BROWSER_ENGINE", raising=False)
+    (destino / ".env").write_text(
+        "ENVIRONMENT=production\nHEADLESS=false\nBROWSER_ENGINE=selenium\nDB_URL=sqlite:///dados_rpa.db\n",
+        encoding="utf-8",
+    )
+
+    runner = FluxoRunner()
+    resultado = runner.executar(
+        caminho_fluxo=destino / "metadados" / "fluxo.yaml",
+        diretorio_projeto=destino,
+    )
+
+    assert resultado.sucesso is True
+    assert os.getenv("HEADLESS") == "false"
+    assert os.getenv("BROWSER_ENGINE") == "selenium"

@@ -89,6 +89,8 @@ Clone o repositório e instale com o entrypoint global:
 ```powershell
 git clone https://github.com/nicolaspn09/pyrpa.git
 cd pyrpa
+pip install git+https://github.com/nicolaspn09/pyrpa.git
+ou
 pip install -e .
 ```
 

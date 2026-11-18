@@ -22,6 +22,10 @@ def test_deve_gerar_estrutura_completa_do_projeto(tmp_path: Path):
     assert (caminho_gerado / ".env").is_file()
     assert (caminho_gerado / ".gitignore").is_file()
 
+    req_txt = (caminho_gerado / "requirements.txt").read_text(encoding="utf-8")
+    assert "pyrpa>=0.1.0" not in req_txt
+    assert "pandas>=" in req_txt and "# pandas" not in req_txt
+
     # Valida que o fluxo gerado respeita o contrato do Pydantic
     arquivo_fluxo = caminho_gerado / "metadados" / "fluxo.yaml"
     esquema = validar_arquivo_fluxo(arquivo_fluxo)

@@ -9,7 +9,7 @@
 
 ## 1. Visão Geral
 
-O **`pyrpa`** é um framework opinativo em Python (>= 3.11) projetado para resolver a fragilidade técnica, o acoplamento excessivo e a falta de padronização no desenvolvimento de Robôs de Automação de Processos (RPA).
+O **`pyrpa`** é um framework opinativo em Python (>= 3.10) projetado para resolver a fragilidade técnica, o acoplamento excessivo e a falta de padronização no desenvolvimento de Robôs de Automação de Processos (RPA).
 
 ### Pilares Fundamentais:
 1. **Clean Architecture Obrigatória**: O domínio do robô (`domain/`) e os casos de uso (`application/`) nunca importam ou dependem diretamente de bibliotecas de automação ou bancos de dados (`infrastructure/`).
@@ -47,9 +47,9 @@ pyrpa --info
 
 ### 2.2. `pyrpa doctor` (ou `pyrpa --doctor`)
 Realiza uma varredura completa na máquina e no ambiente virtual do Python, verificando:
-- Versão do interpretador Python (>= 3.11).
-- Presença dos binários de navegadores instalados no host (Google Chrome, Microsoft Edge, Mozilla Firefox).
-- Pacotes de núcleo instalados (Typer, Rich, Pydantic, PyYAML).
+- Versão do interpretador Python (>= 3.10).
+- Presença dos binários de navegadores instalados no host (Google Chrome/Chromium, Microsoft Edge, Mozilla Firefox em Windows, Linux e macOS).
+- Pacotes de núcleo instalados (Typer, Rich, Pydantic, PyYAML, Python-Dotenv).
 - Conectores opcionais instalados (Playwright, Selenium, SQLAlchemy, Pandas, PyPDF, OpenAI).
 - Validade do projeto local (se executado dentro de uma pasta de robô).
 
@@ -87,6 +87,9 @@ Inicializa um novo robô com a estrutura de Clean Architecture pronta para execu
 3. **Opções adicionais**:
    - `--destino` ou `-d`: Especifica uma pasta customizada para a geração do projeto.
    - `--forcar` ou `-f`: Permite sobrescrever arquivos se a pasta já existir.
+   - `--sem-instalar`: Pula a verificação/instalação automática de dependências via `pip`.
+
+> **Instalação Automática:** ao finalizar a criação das pastas e gerar o `requirements.txt` descomentado com os módulos escolhidos, o `pyrpa init` verifica e instala automaticamente qualquer biblioteca faltante no ambiente Python ativo.
 
 ---
 

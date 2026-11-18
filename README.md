@@ -1,10 +1,10 @@
 # 🤖 pyrpa
 
-[![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Architecture](https://img.shields.io/badge/architecture-Clean%20Architecture-brightgreen.svg)](#-arquitetura-gerada)
+[![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Architecture](https://img.shields.io/badge/architecture-Clean%20Architecture-brightgreen.svg)](#-arquitetura-gerada-nos-projetos-filhos)
 [![Validation](https://img.shields.io/badge/validation-Pydantic%20v2-purple.svg)](https://docs.pydantic.dev/latest/)
 [![CLI Framework](https://img.shields.io/badge/CLI-Typer%20%2B%20Rich-orange.svg)](https://typer.tiangolo.com/)
-[![Tests](https://img.shields.io/badge/tests-12%2F12%20passing-success.svg)](#-testes-e-qualidade)
+[![Tests](https://img.shields.io/badge/tests-69%2F69%20passing-success.svg)](#-testes-e-qualidade)
 [![License](https://img.shields.io/badge/license-MIT-informational.svg)](LICENSE)
 
 > **CLI Opinativa para Gestão de Projetos de Robotic Process Automation (RPA) em Python Corporativo com Clean Architecture e Orquestração Declarativa.**
@@ -15,150 +15,150 @@
 
 Estudos de mercado (Ernst & Young, Deloitte) apontam que entre **30% e 50% dos projetos corporativos de automação falham ao tentar escalar**. A raiz desse gargalo é o **alto débito técnico**: scripts construídos sem padrões estruturais (*code smells* em até 98% dos repositórios não padronizados), onde lógicas de negócio estão misturadas com código de infraestrutura (drivers de navegadores, bibliotecas de scraping e conexões de banco de dados).
 
-O **`pyrpa`** nasce para resolver esse problema através da **padronização arquitetural obrigatória**:
-- **Força a Clean Architecture**: Desacopla estritamente regras de domínio das bibliotecas voláteis de automação (Playwright, Selenium, Pandas).
-- **Orquestração Declarativa**: Cada robô possui um arquivo `metadados/fluxo.yaml` que atua como grafo de execução validado por contratos Pydantic v2.
-- **Preparado para Apache Airflow**: Os metadados declarativos eliminam acoplamento e facilitam a conversão nativa em DAGs do Airflow.
-- **Auditoria & Observabilidade**: Impede duplicidade de IDs e garante rastreabilidade em logs estruturados corporativos.
+O **`pyrpa`** resolve esse problema através da **padronização arquitetural obrigatória**:
+- **Força a Clean Architecture**: Desacopla estritamente regras de domínio (`domain/` e `application/`) das bibliotecas voláteis de infraestrutura (`infrastructure/`).
+- **Orquestração Declarativa**: Cada robô possui um contrato `metadados/fluxo.yaml` validado por schemas Pydantic v2.
+- **Execução Local + Apache Airflow**: Roda localmente com `pyrpa run` (carregando o `.env` automaticamente) ou compila nativamente em DAGs do Airflow com `pyrpa compile`.
+- **Dependências Prontas e Verificação Automática**: Instala automaticamente todas as bibliotecas dos conectores escolhidos (`pandas`, `openpyxl`, `pypdf`, `sqlalchemy`, `playwright`, `selenium`, `openai`, `python-dotenv`).
+- **Auditoria & Observabilidade**: Impede duplicidade de IDs e garante rastreabilidade com logs estruturados.
+
+> 📖 **Documentação Técnica Completa:** consulte [docs/MANUAL_DESENVOLVEDOR_PYRPA.md](docs/MANUAL_DESENVOLVEDOR_PYRPA.md).
+
+---
+
+## 🚀 Instalação (Linux, macOS e Windows)
+
+### Pré-requisitos
+- **Python 3.10 ou superior** (compatível nativamente com Ubuntu 22.04+, Debian 12+, macOS e Windows 10/11).
+- `git` (opcional, se clonar o repositório).
+
+> **Importante:** Nunca utilize `pip install pyrpa` diretamente sem o endereço do GitHub — o pacote publicado com esse nome no PyPI pertence a outro projeto de terceiros.
+
+### Opção 1: Instalador Automático (Mais Simples — Recomendado)
+
+#### 🐧 Linux / Ubuntu / macOS
+Evita automaticamente o erro `externally-managed-environment` (PEP 668) do Ubuntu 24.04+ criando o `.venv` e registrando o comando global:
+```bash
+git clone https://github.com/nicolaspn09/pyrpa.git
+cd pyrpa
+bash instalar.sh
+```
+*(Se no Ubuntu aparecer aviso de módulo `venv` ausente, instale antes: `sudo apt update && sudo apt install -y python3 python3-pip python3-venv`).*
+
+#### 🪟 Windows (PowerShell ou Prompt de Comando)
+```powershell
+git clone https://github.com/nicolaspn09/pyrpa.git
+cd pyrpa
+.\instalar.bat
+```
+*(Ou dê 2 cliques no arquivo `instalar.bat` dentro da pasta baixada).*
+
+---
+
+### Opção 2: Instalação via `pip` em Ambiente Virtual (`.venv`)
+
+Caso prefira instalar manualmente sem o script automático:
+
+**No Linux / Ubuntu / macOS:**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install git+https://github.com/nicolaspn09/pyrpa.git
+pyrpa doctor
+```
+
+**No Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install --upgrade pip setuptools wheel
+pip install git+https://github.com/nicolaspn09/pyrpa.git
+pyrpa doctor
+```
+
+> **Dica se o comando `pyrpa` não for reconhecido no terminal:** utilize sempre `python -m pyrpa doctor` (ou `python3 -m pyrpa doctor` no Linux). O módulo `pyrpa` responde exatamente aos mesmos comandos e opções.
+
+---
+
+## 💻 Guia Completo de Comandos da CLI
+
+```powershell
+# Ver ajuda completa, versão, catálogo interativo e saúde do sistema
+pyrpa --help
+pyrpa --version
+pyrpa info
+pyrpa doctor
+
+# 1. Criar um novo projeto RPA (verifica e instala libs faltantes automaticamente)
+pyrpa init robo_completo -m completo     # Todos os conectores
+pyrpa init robo_compras -m web,banco     # Apenas módulos selecionados
+pyrpa init meu_robo                      # Menu interativo no terminal
+pyrpa init robo_pasta -d C:\Projetos\robo --forcar
+
+# 2. Adicionar um conector extra depois de criado (web, banco, excel, pdf, ia, email)
+cd robo_compras
+pyrpa add pdf
+pyrpa add excel
+
+# 3. Validar o contrato declarativo YAML (Pydantic v2)
+pyrpa validate
+
+# 4. Executar o robô localmente (lê o .env da pasta do robô automaticamente)
+pyrpa run
+# Ou diretamente via Python:
+python main.py
+
+# 5. Compilar o fluxo.yaml para uma DAG do Apache Airflow
+pyrpa compile -s diario                  # manual | horario | diario | semanal | mensal | "cron"
+```
 
 ---
 
 ## 🏛 Arquitetura Gerada nos Projetos-Filhos
 
-Ao rodar `pyrpa init <nome_do_projeto>`, o esqueleto gerado segue estritamente o isolamento das 4 camadas da Arquitetura Limpa:
+Ao rodar `pyrpa init <nome_do_projeto>`, a árvore gerada segue o isolamento da Arquitetura Limpa:
 
 ```text
 <nome_do_projeto>/
-├── domain/            # Regras de cálculo, entidades e validações puras (Python puro, zero dependências externas)
-├── application/       # Casos de uso (UseCases) e lógica de orquestração interna do robô
-├── infrastructure/    # Adaptadores externos: drivers (Playwright, Selenium), bancos SQL e chamadas de API
-├── interfaces/        # Ponto de entrada, controladores CLI locais e adapters de log
+├── domain/            # Regras de cálculo, entidades e filas (zero dependências externas)
+├── application/       # Casos de uso (UseCases) herdando de BaseUseCase
+├── infrastructure/    # Adaptadores defensivos (browser, database, storage, pdf, ai, notifier, http_client, logger)
+├── interfaces/        # Controladores locais e pontos de entrada
 ├── metadados/
-│   └── fluxo.yaml     # Grafo declarativo de execução e catálogo de providers
-├── requirements.txt   # Dependências mínimas versionadas do projeto gerado
-├── .env               # Variáveis de ambiente isoladas (HEADLESS, credenciais, timeouts)
-├── .gitignore         # Blindagem preventiva contra vazamento de credenciais e caches
-└── main.py            # Ponto de entrada instanciado pelo framework
+│   └── fluxo.yaml     # Grafo declarativo de execução validado pelo Pydantic
+├── dags/              # DAGs Python compiladas para o Apache Airflow
+├── relatorios/        # Planilhas Excel exportadas
+├── logs/              # Logs estruturados de auditoria
+├── requirements.txt   # Dependências ativas descomentadas (sem colisão com PyPI)
+├── .env               # Variáveis de ambiente locais (lidas automaticamente pelo FluxoRunner)
+├── .gitignore         # Proteção contra vazamento de credenciais e caches
+└── main.py            # Ponto de entrada de execução direta
 ```
-
-### Regra de Dependência
-```
-interfaces ──▶ application ──▶ domain ◀── infrastructure
-```
-- **`domain`** não conhece nenhuma outra camada.
-- **`application`** contém os casos de uso que implementam interfaces/protocolos abstratos.
-- **`infrastructure`** implementa os detalhes concretos (ex: como abrir o Chrome via Playwright).
-
----
-
-## 📜 Contrato Declarativo (`metadados/fluxo.yaml`)
-
-O grafo de execução do robô é estruturado e validado defensivamente via Pydantic v2 contra o `FluxoSchema`:
-
-```yaml
-fluxo:
-  nome: "robo_faturamento"
-  versao: "1.0.0"
-  passos:
-    - id: "passo_1"
-      nome: "Extrair Dados"
-      provider: "playwright" # playwright, selenium, pandas ou custom
-      target: "application.extracao.ExtrairDadosUseCase"
-    - id: "passo_2"
-      nome: "Processar Dados"
-      provider: "pandas"
-      target: "application.processamento.ProcessarDadosUseCase"
-```
-
-### Validações Automáticas de Contrato
-- **Unicidade de IDs**: O Pydantic rejeita arquivos com passos contendo IDs repetidos, prevenindo colisões no Apache Airflow e em coletores de logs.
-- **Formato Canônico do Target**: O campo `target` exige regex de módulo Python válido (`pacote.modulo.ClasseUseCase`).
-- **Sanitização de Nomes**: Nomes de projetos e IDs aceitam apenas caracteres seguros (`^[a-zA-Z0-9_-]+$`).
-
----
-
-## 🚀 Instalação e Inicialização
-
-### Pré-requisitos
-- Python **3.11** ou superior
-- Pip ou Poetry
-
-### Instalação em Modo de Desenvolvimento
-Clone o repositório e instale com o entrypoint global:
-
-```powershell
-git clone https://github.com/nicolaspn09/pyrpa.git
-cd pyrpa
-pip install git+https://github.com/nicolaspn09/pyrpa.git
-ou
-pip install -e .
-```
-
-Pronto! O executável `pyrpa` estará disponível globalmente no terminal.
-
----
-
-## 💻 Guia de Uso da CLI
-
-### 1. Inicializar um Novo Projeto RPA
-Cria o esqueleto completo com as camadas da Clean Architecture:
-
-```powershell
-# Cria a pasta ./robo_financeiro no diretório atual
-pyrpa init robo_financeiro
-
-# Ou especifique um diretório de destino customizado
-pyrpa init robo_financeiro --destino C:\Projetos\RPA\robo_financeiro
-
-# Forçar criação mesmo se o diretório não estiver vazio
-pyrpa init robo_financeiro --forcar
-```
-
-### 2. Validar o Contrato de um Robô Existente
-Valida a sintaxe do YAML e as regras de negócio antes de subir para produção ou pipeline de CI/CD:
-
-```powershell
-# Valida o fluxo padrão (./metadados/fluxo.yaml)
-pyrpa validate
-
-# Valida um arquivo específico
-pyrpa validate caminho/para/metadados/fluxo.yaml
-```
-
-Se o YAML contiver erros de indentação, chaves duplicadas ou caminhos Python inválidos, a CLI exibirá um painel estilizado com a linha e causa exata do erro.
 
 ---
 
 ## 🧪 Testes e Qualidade
 
-O framework foi desenvolvido sob metodologia **TDD (Test-Driven Development)** e possui 100% de cobertura nos fluxos críticos:
+O framework possui **69 testes unitários e de integração** automatizados com `pytest`:
 
-```powershell
-# Executar a suíte completa de testes unitários e de integração
+```bash
+# Executar toda a suíte
 pytest -v
 ```
 
-```text
-tests/unit/test_schema.py      -> Validação de contrato Pydantic, duplicidade de IDs e targets
-tests/unit/test_validator.py   -> Parsing seguro com PyYAML, erros de sintaxe e I/O defensivo
-tests/unit/test_generator.py   -> Scaffolding da árvore Clean Architecture e proteção de sobrescrita
-tests/integration/test_cli.py  -> Comandos Typer 'init' e 'validate' via CliRunner
-```
+* `tests/integration/test_cli.py` — Testes ponta a ponta da CLI (`--version`, `info`, `doctor`, `init`, `add`, `validate`, `run`, `compile` e dica de navegação).
+* `tests/unit/test_schema.py` & `test_validator.py` — Contratos Pydantic v2, regex e leitura segura de YAML.
+* `tests/unit/test_generator.py`, `test_modifier.py` & `test_installer.py` — Scaffolding Clean Architecture, inclusão modular e instalação automática de dependências.
+* `tests/unit/test_runner.py`, `test_compiler.py` & `test_contracts.py` — Execução com `.env`, compartilhamento de contexto e compilação Airflow.
+* `tests/unit/test_infrastructure.py`, `test_doctor.py`, `test_ai.py`, `test_pdf.py` & `test_queue.py` — Adaptadores de infraestrutura, diagnóstico SO/navegadores e fila transacional.
 
 ---
 
 ## 🎓 Contexto Acadêmico e Autoria
 
-Este projeto faz parte do **Trabalho de Conclusão de Curso (TCC II)** do curso de **Análise e Desenvolvimento de Sistemas (ADS)** do **Instituto Federal de Santa Catarina (IFSC)**.
+Projeto desenvolvido como **Trabalho de Conclusão de Curso (TCC II)** do curso de **Tecnologia em Análise e Desenvolvimento de Sistemas (ADS)** do **Instituto Federal de Santa Catarina (IFSC — Câmpus Tubarão)**.
 
-- **Tema:** *Arquitetura Padronizada para Scripts de Automação Python em Ambientes Corporativos: Proposta de um modelo arquitetural para melhoria de manutenibilidade, escalabilidade e governança*
-- **Autores:** 
-  - [Kauê Cunha Baesso](https://github.com)
-  - [Nícolas Paulo Nasário](https://github.com/nicolaspn09)
+- **Autores:** Kauê Cunha Baesso e [Nícolas Paulo Nasário](https://github.com/nicolaspn09)
 - **Orientador:** Prof. Tiago Guimarães Moraes
-
----
-
-## 📄 Licença
-
-Distribuído sob a licença MIT. Consulte `LICENSE` para mais informações.
+- **Licença:** MIT

@@ -1,0 +1,74 @@
+name: CI Multi-Ambiente (Linux & Windows)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-matrix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Testar instalador automático no Linux (Ubuntu)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          bash instalar.sh
+          source .venv/bin/activate
+          pip install "pytest>=8.0.0"
+          pytest -v
+
+      - name: Testar instalação e suíte no Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip "setuptools>=64.0" wheel
+          python -m pip install -e ".[dev]"
+          python -m pyrpa --version
+          python -m pyrpa doctor
+          python -m pytest -v
+
+      - name: Teste ponta a ponta fora do repositório (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          source "$GITHUB_WORKSPACE/.venv/bin/activate"
+          mkdir -p "$RUNNER_TEMP/e2e_linux"
+          cd "$RUNNER_TEMP/e2e_linux"
+          pyrpa init robo_completo -m completo
+          cd robo_completo
+          pyrpa add pdf
+          pyrpa validate
+          pyrpa run
+          pyrpa compile -s diario
+          python main.py
+
+      - name: Teste ponta a ponta fora do repositório (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path "$env:RUNNER_TEMP\e2e_win" -Force | Out-Null
+          Set-Location "$env:RUNNER_TEMP\e2e_win"
+          pyrpa init robo_completo -m completo
+          Set-Location "$env:RUNNER_TEMP\e2e_win\robo_completo"
+          pyrpa add pdf
+          pyrpa validate
+          pyrpa run
+          pyrpa compile -s diario
+          python main.py

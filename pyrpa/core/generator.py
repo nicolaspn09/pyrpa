@@ -3,6 +3,8 @@ import re
 from textwrap import dedent
 from typing import List, Optional, Set, Union
 
+from pyrpa.core.installer import gerar_conteudo_requirements
+
 
 class GeradorProjetoException(Exception):
     """Lançada quando ocorrem erros durante a geração do projeto RPA."""
@@ -249,30 +251,8 @@ def gerar_projeto_rpa(
     """).strip()
     (raiz / "metadados" / "fluxo.yaml").write_text(conteudo_fluxo, encoding="utf-8")
 
-    # 5. Geração do requirements.txt inicial
-    conteudo_requirements = dedent(f"""
-    # Núcleo do framework e dependências base
-    pyrpa>=0.1.0
-    python-dotenv>=1.0.0
-
-    # Manipulação de Dados e Planilhas Excel
-    pandas>=2.0.0
-    openpyxl>=3.1.0
-
-    # Leitura e Extração de Documentos PDF
-    pypdf>=5.0.0
-
-    # Automação Web (descomente os que for utilizar)
-    # playwright>=1.40.0
-    # selenium>=4.15.0
-    # undetected-chromedriver>=3.5.0
-
-    # Banco de dados corporativo (PostgreSQL, SQL Server, MySQL)
-    # sqlalchemy>=2.0.0
-
-    # Inteligência Artificial / LLMs (opcional)
-    # openai>=1.0.0
-    """).strip()
+    # 5. Geração do requirements.txt descomentado conforme módulos selecionados
+    conteudo_requirements = gerar_conteudo_requirements(mods_selecionados)
     (raiz / "requirements.txt").write_text(conteudo_requirements, encoding="utf-8")
 
     # 6. Geração do .env padrão

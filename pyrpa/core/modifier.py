@@ -4,6 +4,7 @@ from textwrap import dedent
 from typing import List, Optional, Union
 import yaml
 
+from pyrpa.core.installer import registrar_dependencias_requirements
 from pyrpa.core.validator import validar_arquivo_fluxo
 
 
@@ -333,7 +334,8 @@ def adicionar_modulo_projeto(
     caminho_fluxo.write_text(yaml.dump(dados_yaml, allow_unicode=True, sort_keys=False), encoding="utf-8")
     arquivos_criados.append("metadados/fluxo.yaml (atualizado)")
 
-    # 5. Valida o fluxo com o validador oficial
+    # 5. Atualiza requirements.txt e valida o fluxo com o validador oficial
+    registrar_dependencias_requirements(raiz / "requirements.txt", {modulo_limpo})
     validar_arquivo_fluxo(caminho_fluxo)
 
     return ResultadoAdicaoModulo(

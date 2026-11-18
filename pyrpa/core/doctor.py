@@ -16,32 +16,35 @@ class ItemDiagnostico:
     detalhes: str
 
 
+_EXECUTAVEIS_WINDOWS = {
+    "chrome": ("Google", "Chrome", "Application", "chrome.exe"),
+    "edge": ("Microsoft", "Edge", "Application", "msedge.exe"),
+    "firefox": ("Mozilla Firefox", "firefox.exe"),
+}
+
+_CANDIDATOS_UNIX = {
+    "chrome": ["chrome", "google-chrome", "google-chrome-stable", "chromium", "chromium-browser"],
+    "edge": ["msedge", "microsoft-edge", "microsoft-edge-stable"],
+    "firefox": ["firefox"],
+}
+
+
 def verificar_navegador_instalado(nome_navegador: str) -> bool:
-    """Verifica se o binário do navegador existe nos caminhos padrão do Windows ou no PATH."""
+    """Verifica se o binário do navegador existe no sistema (Windows, Linux ou macOS)."""
     sistema = platform.system()
-    if sistema == "Windows":
+    if sistema == "Windows" and nome_navegador in _EXECUTAVEIS_WINDOWS:
         pastas_prog = [
             os.environ.get("PROGRAMFILES", "C:\\Program Files"),
             os.environ.get("PROGRAMFILES(X86)", "C:\\Program Files (x86)"),
             os.environ.get("LOCALAPPDATA", ""),
         ]
-        if nome_navegador == "chrome":
-            for pasta in pastas_prog:
-                if (Path(pasta) / "Google" / "Chrome" / "Application" / "chrome.exe").is_file():
-                    return True
-            return shutil.which("chrome") is not None
-        elif nome_navegador == "edge":
-            for pasta in pastas_prog:
-                if (Path(pasta) / "Microsoft" / "Edge" / "Application" / "msedge.exe").is_file():
-                    return True
-            return shutil.which("msedge") is not None
-        elif nome_navegador == "firefox":
-            for pasta in pastas_prog:
-                if (Path(pasta) / "Mozilla Firefox" / "firefox.exe").is_file():
-                    return True
-            return shutil.which("firefox") is not None
-    else:
-        return shutil.which(nome_navegador) is not None
+        rel_path = Path(*_EXECUTAVEIS_WINDOWS[nome_navegador])
+        if any(pasta and (Path(pasta) / rel_path).is_file() for pasta in pastas_prog):
+            return True
+
+    for binario in _CANDIDATOS_UNIX.get(nome_navegador, [nome_navegador]):
+        if shutil.which(binario) is not None:
+            return True
 
     return False
 
@@ -56,19 +59,19 @@ def executar_diagnostico_doctor(diretorio_atual: Optional[Path] = None) -> List[
     # 1. Ambiente Python e Sistema Operacional
     v_python = sys.version_info
     versao_str = f"{v_python.major}.{v_python.minor}.{v_python.micro}"
-    if v_python >= (3, 11):
+    if v_python >= (3, 10):
         diagnosticos.append(ItemDiagnostico(
             categoria="Sistema Base",
             item="Versão do Python",
             status="OK",
-            detalhes=f"Python {versao_str} (Atende ao requisito >= 3.11)"
+            detalhes=f"Python {versao_str} (Atende ao requisito >= 3.10)"
         ))
     else:
         diagnosticos.append(ItemDiagnostico(
             categoria="Sistema Base",
             item="Versão do Python",
             status="FALHA",
-            detalhes=f"Python {versao_str} (Requer Python >= 3.11)"
+            detalhes=f"Python {versao_str} (Requer Python >= 3.10)"
         ))
 
     sistema_nome = platform.system()
@@ -118,6 +121,7 @@ def executar_diagnostico_doctor(diretorio_atual: Optional[Path] = None) -> List[
         ("rich", "Rich (Terminal Visual)"),
         ("pydantic", "Pydantic v2 (Validação de Contratos)"),
         ("yaml", "PyYAML (Orquestração Declarativa)"),
+        ("dotenv", "Python-Dotenv (Variáveis .env)"),
     ]
     for mod_nome, descricao in pacotes_obrigatorios:
         try:

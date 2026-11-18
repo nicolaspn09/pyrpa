@@ -8,7 +8,8 @@ from rich.table import Table
 
 from pyrpa.core.compiler import AirflowCompiler, CompiladorException, mapear_periodicidade_para_cron
 from pyrpa.core.doctor import executar_diagnostico_doctor
-from pyrpa.core.generator import gerar_projeto_rpa, GeradorProjetoException
+from pyrpa.core.generator import gerar_projeto_rpa, GeradorProjetoException, normalizar_modulos
+from pyrpa.core.installer import garantir_dependencias_modulos, ResultadoInstalacaoDeps
 from pyrpa.core.modifier import adicionar_modulo_projeto, ModificadorProjetoException, MODULOS_SUPORTADOS
 from pyrpa.core.runner import FluxoRunner
 from pyrpa.core.validator import validar_arquivo_fluxo, FluxoInvalidoException
@@ -271,6 +272,28 @@ def doctor(
         ))
 
 
+def _exibir_status_dependencias(res: ResultadoInstalacaoDeps) -> None:
+    """Exibe o resultado da verificação e instalação automática de bibliotecas."""
+    if res.falhas:
+        lista_falhas = ", ".join(res.falhas)
+        console.print(Panel.fit(
+            f"[bold yellow][AVISO] Algumas bibliotecas não puderam ser instaladas automaticamente:[/bold yellow]\n"
+            f"{lista_falhas}\n\n"
+            f"[white]Detalhes:[/white] {res.erro_detalhe}\n"
+            f"[yellow]Instale manualmente com:[/yellow] pip install -r requirements.txt",
+            border_style="yellow",
+        ))
+        return
+
+    if res.instalados_agora:
+        lista_novos = ", ".join(res.instalados_agora)
+        console.print(f"[bold green][OK] Bibliotecas instaladas automaticamente:[/bold green] {lista_novos}")
+    elif res.ja_instalados:
+        console.print(
+            f"[bold green][OK] Dependências verificadas ({len(res.ja_instalados)} pacote(s) pronto(s) no ambiente).[/bold green]"
+        )
+
+
 @app.command(name="init")
 def init(
     nome_projeto: str = typer.Argument(..., help="Nome do projeto / robô a ser criado"),
@@ -288,6 +311,11 @@ def init(
         None,
         "--modulos", "-m",
         help="Módulos a incluir (ex: 'web,banco', 'excel,email', 'completo')"
+    ),
+    sem_instalar: bool = typer.Option(
+        False,
+        "--sem-instalar",
+        help="Não executa instalação automática de dependências faltantes via pip"
     )
 ) -> None:
     """
@@ -341,6 +369,14 @@ def init(
         tabela.add_row("metadados/fluxo.yaml", "Orquestração declarativa dos passos e adaptadores")
 
         console.print(tabela)
+
+        mods_selecionados = normalizar_modulos(modulos)
+        res_deps = garantir_dependencias_modulos(
+            mods_selecionados,
+            instalar_automaticamente=not sem_instalar,
+        )
+        _exibir_status_dependencias(res_deps)
+
         console.print(Panel.fit(
             f"[bold green][OK] Projeto criado com sucesso em:[/bold green]\n{caminho_final}\n\n"
             f"[yellow]Para começar:[/yellow]\n"
@@ -366,6 +402,11 @@ def add(
         None,
         "--destino", "-d",
         help="Diretório do projeto (padrão: diretório atual)"
+    ),
+    sem_instalar: bool = typer.Option(
+        False,
+        "--sem-instalar",
+        help="Não executa instalação automática de dependências faltantes via pip"
     )
 ) -> None:
     """
@@ -386,6 +427,14 @@ def add(
             tabela.add_row("Arquivo Gerado/Atualizado", arq)
 
         console.print(tabela)
+
+        res_deps = garantir_dependencias_modulos(
+            {modulo.strip().lower()},
+            instalar_automaticamente=not sem_instalar,
+            incluir_base=False,
+        )
+        _exibir_status_dependencias(res_deps)
+
         console.print(Panel.fit(
             f"[bold green][OK] Módulo '{modulo}' incorporado com sucesso ao fluxo.yaml![/bold green]\n\n"
             f"[yellow]Próximos passos:[/yellow]\n"

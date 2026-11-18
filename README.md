@@ -32,9 +32,30 @@ O **`pyrpa`** resolve esse problema através da **padronização arquitetural ob
 - **Python 3.10 ou superior** (compatível nativamente com Ubuntu 22.04+, Debian 12+, macOS e Windows 10/11).
 - `git` (opcional, se clonar o repositório).
 
-> **Importante:** Nunca utilize `pip install pyrpa` diretamente sem o endereço do GitHub — o pacote publicado com esse nome no PyPI pertence a outro projeto de terceiros.
+> **Importante:** O nome do pacote oficial no PyPI é **`pyrpa-framework`** (nunca rode `pip install pyrpa`, pois `pyrpa` no PyPI é outra biblioteca de terceiros). Se já instalou errado antes, remova com `pip uninstall pyrpa -y`.
 
-### Opção 1: Instalador Automático (Mais Simples — Recomendado)
+### Opção 1: Via PyPI Oficial em Ambiente Virtual (`.venv`) — Mais Rápida (Sem Git)
+
+**No Linux / Ubuntu / macOS:**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install pyrpa-framework
+pyrpa doctor
+```
+*(Se no Ubuntu aparecer aviso de módulo `venv` faltando, rode antes: `sudo apt update && sudo apt install -y python3 python3-pip python3-venv`).*
+
+**No Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install pyrpa-framework
+pyrpa doctor
+```
+
+---
+
+### Opção 2: Instalador Automático do Repositório (1 Comando)
 
 #### 🐧 Linux / Ubuntu / macOS
 Cria um ambiente isolado automaticamente (evitando erros de permissão do Ubuntu) e configura o comando `pyrpa`:
@@ -43,7 +64,6 @@ git clone https://github.com/nicolaspn09/pyrpa.git
 cd pyrpa
 bash instalar.sh
 ```
-*(Se aparecer aviso de módulo `venv` faltando no Ubuntu, rode antes: `sudo apt update && sudo apt install -y python3 python3-pip python3-venv`).*
 
 #### 🪟 Windows (PowerShell ou Prompt de Comando)
 ```powershell
@@ -52,30 +72,6 @@ cd pyrpa
 .\instalar.bat
 ```
 *(Ou dê 2 cliques no arquivo `instalar.bat` dentro da pasta baixada).*
-
----
-
-### Opção 2: Instalação via `pip` em Ambiente Virtual (`.venv`)
-
-Caso prefira instalar manualmente sem o script automático:
-
-**No Linux / Ubuntu / macOS:**
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install git+https://github.com/nicolaspn09/pyrpa.git
-pyrpa doctor
-```
-
-**No Windows (PowerShell):**
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install --upgrade pip setuptools wheel
-pip install git+https://github.com/nicolaspn09/pyrpa.git
-pyrpa doctor
-```
 
 > **Dica se o comando `pyrpa` não for reconhecido no terminal:** utilize sempre `python -m pyrpa doctor` (ou `python3 -m pyrpa doctor` no Linux). O módulo `pyrpa` responde exatamente aos mesmos comandos e opções.
 

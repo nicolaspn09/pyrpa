@@ -22,9 +22,21 @@ O **`pyrpa`** é um framework opinativo em Python (>= 3.10) projetado para resol
 ### Instalação (Windows, Linux/Ubuntu e macOS)
 
 > **Pré-requisito:** Python **3.10 ou superior**.  
-> **Importante:** Nunca use `pip install pyrpa` sem o endereço do GitHub — esse nome no PyPI pertence a outro projeto.
+> **Importante:** O nome oficial no PyPI é **`pyrpa-framework`** (nunca use `pip install pyrpa`, pois pertence a outro projeto no PyPI; caso já tenha instalado o errado, remova com `pip uninstall pyrpa -y`).
 
-### Opção Recomendada (Instalador Automático em 1 Comando)
+### Opção 1: Instalação Direta pelo PyPI (`.venv` — Sem precisar clonar)
+```bash
+# 1. Crie e ative um ambiente virtual
+python3 -m venv .venv
+# Linux/Mac: source .venv/bin/activate
+# Windows:   .\.venv\Scripts\Activate.ps1
+
+# 2. Instale o framework oficial
+pip install pyrpa-framework
+pyrpa doctor
+```
+
+### Opção 2: Instalador Automático via GitHub (1 Comando)
 
 * **No Windows (PowerShell ou CMD):**
   ```powershell
@@ -38,16 +50,6 @@ O **`pyrpa`** é um framework opinativo em Python (>= 3.10) projetado para resol
   cd pyrpa
   bash instalar.sh
   ```
-
-### Alternativa Manual com Ambiente Virtual (`.venv`)
-```bash
-python3 -m venv .venv
-# Ativar no Linux/Mac: source .venv/bin/activate
-# Ativar no Windows:  .\.venv\Scripts\Activate.ps1
-pip install --upgrade pip setuptools wheel
-pip install git+https://github.com/nicolaspn09/pyrpa.git
-pyrpa doctor
-```
 
 *(Dica: se o terminal não reconhecer `pyrpa` direto, use `python -m pyrpa doctor` ou `python3 -m pyrpa doctor`).*
 

@@ -73,8 +73,8 @@ def gerar_conteudo_requirements(modulos: Set[str]) -> str:
     """Gera um requirements.txt limpo e descomentado para os módulos escolhidos."""
     pacotes = listar_pacotes_pip_modulos(modulos, incluir_base=True)
     linhas = [
-        "# Framework pyrpa (instalar via repositório oficial, não pelo PyPI)",
-        "pyrpa @ git+https://github.com/nicolaspn09/pyrpa.git",
+        "# Framework pyrpa (pacote oficial no PyPI)",
+        "pyrpa-framework>=0.1.0",
         "",
         "# Dependências ativas do robô (instaladas automaticamente pelo pyrpa init/add)",
         *pacotes,

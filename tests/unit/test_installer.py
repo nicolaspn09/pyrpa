@@ -19,7 +19,7 @@ def test_listar_pacotes_completo_sem_duplicidade():
 def test_gerar_requirements_descomentado_e_sem_colisao_pypi():
     conteudo = gerar_conteudo_requirements({"web", "banco", "excel", "pdf", "ia", "email"})
     assert "pyrpa>=0.1.0" not in conteudo
-    assert "pyrpa @ git+https://github.com/nicolaspn09/pyrpa.git" in conteudo
+    assert "pyrpa-framework>=0.1.0" in conteudo
     assert "\nplaywright>=" in conteudo
     assert "\nselenium>=" in conteudo
     assert "\nsqlalchemy>=" in conteudo

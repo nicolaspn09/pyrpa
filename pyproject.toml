@@ -3,13 +3,27 @@ requires = ["setuptools>=64.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyrpa"
+name = "pyrpa-framework"
 version = "0.1.0"
 description = "CLI opinativa para scaffolding e orquestração declarativa de projetos RPA em Clean Architecture"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [
-    { name = "Kauê Cunha Baesso / Nícolas Paulo Nasário" }
+    { name = "Kauê Cunha Baesso" },
+    { name = "Nícolas Paulo Nasário", email = "nicolaspn09@gmail.com" }
+]
+keywords = ["rpa", "clean-architecture", "automation", "airflow", "cli", "yaml", "pydantic"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
 ]
 dependencies = [
     "typer>=0.12.0",
@@ -34,6 +48,11 @@ dev = [
 undetected = [
     "undetected-chromedriver>=3.5.0"
 ]
+
+[project.urls]
+Homepage = "https://github.com/nicolaspn09/pyrpa"
+Documentation = "https://github.com/nicolaspn09/pyrpa/blob/main/docs/MANUAL_DESENVOLVEDOR_PYRPA.md"
+Repository = "https://github.com/nicolaspn09/pyrpa.git"
 
 [project.scripts]
 pyrpa = "pyrpa.cli:app"

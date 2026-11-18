@@ -34,31 +34,26 @@ O **`pyrpa`** resolve esse problema através da **padronização arquitetural ob
 
 > **Importante:** O nome do pacote oficial no PyPI é **`pyrpa-framework`** (nunca rode `pip install pyrpa`, pois `pyrpa` no PyPI é outra biblioteca de terceiros). Se já instalou errado antes, remova com `pip uninstall pyrpa -y`.
 
-### Opção 1: Via PyPI Oficial em Ambiente Virtual (`.venv`) — Mais Rápida (Sem Git)
+### Opção 1: Via PyPI Oficial (Mais Rápida — Sem `venv` e Sem Git)
 
-**No Linux / Ubuntu / macOS:**
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
 pip install pyrpa-framework
 pyrpa doctor
 ```
-*(Se no Ubuntu aparecer aviso de módulo `venv` faltando, rode antes: `sudo apt update && sudo apt install -y python3 python3-pip python3-venv`).*
 
-**No Windows (PowerShell):**
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install pyrpa-framework
-pyrpa doctor
-```
+*Já baixa automaticamente todas as 13 bibliotecas necessárias (conectores Web, PDF, Excel, Banco, IA e CLI).*
+
+**Se aparecer algum aviso no seu computador:**
+- **Windows** (caso `pip` ou `pyrpa` não seja reconhecido nesta janela): use `python -m pip install pyrpa-framework` e depois `python -m pyrpa doctor` (ou abra um novo terminal).
+- **Linux / Ubuntu 23.04+ / 24.04+** (caso dê erro de proteção do sistema `externally-managed-environment`): use `pip3 install --break-system-packages pyrpa-framework` (se faltar o `pip3`, rode `sudo apt update && sudo apt install -y python3-pip`).
 
 ---
 
-### Opção 2: Instalador Automático do Repositório (1 Comando)
+### Opção 2: Instalador Automático com Ambiente Virtual Isolado (`.venv`, via GitHub)
+
+Recomendado se você preferir isolar as bibliotecas do seu sistema ou for contribuir com o código-fonte:
 
 #### 🐧 Linux / Ubuntu / macOS
-Cria um ambiente isolado automaticamente (evitando erros de permissão do Ubuntu) e configura o comando `pyrpa`:
 ```bash
 git clone https://github.com/nicolaspn09/pyrpa.git
 cd pyrpa
@@ -73,7 +68,7 @@ cd pyrpa
 ```
 *(Ou dê 2 cliques no arquivo `instalar.bat` dentro da pasta baixada).*
 
-> **Dica se o comando `pyrpa` não for reconhecido no terminal:** utilize sempre `python -m pyrpa doctor` (ou `python3 -m pyrpa doctor` no Linux). O módulo `pyrpa` responde exatamente aos mesmos comandos e opções.
+> **Dica se o comando `pyrpa` não for reconhecido no terminal:** utilize `python -m pyrpa doctor` (ou `python3 -m pyrpa doctor` no Linux). O módulo `python -m pyrpa` responde exatamente aos mesmos comandos (`init`, `add`, `validate`, `run`, `compile`).
 
 ---
 

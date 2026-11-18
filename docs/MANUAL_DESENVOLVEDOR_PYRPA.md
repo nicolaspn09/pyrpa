@@ -24,19 +24,20 @@ O **`pyrpa`** é um framework opinativo em Python (>= 3.10) projetado para resol
 > **Pré-requisito:** Python **3.10 ou superior**.  
 > **Importante:** O nome oficial no PyPI é **`pyrpa-framework`** (nunca use `pip install pyrpa`, pois pertence a outro projeto no PyPI; caso já tenha instalado o errado, remova com `pip uninstall pyrpa -y`).
 
-### Opção 1: Instalação Direta pelo PyPI (`.venv` — Sem precisar clonar)
+### Opção 1: Instalação Direta pelo PyPI (1 Comando — Sem precisar de `venv` nem Git)
 ```bash
-# 1. Crie e ative um ambiente virtual
-python3 -m venv .venv
-# Linux/Mac: source .venv/bin/activate
-# Windows:   .\.venv\Scripts\Activate.ps1
-
-# 2. Instale o framework oficial
 pip install pyrpa-framework
 pyrpa doctor
 ```
+*Já instala automaticamente todas as 13 bibliotecas dos conectores.*
 
-### Opção 2: Instalador Automático via GitHub (1 Comando)
+**Caso apareça algum aviso no terminal:**
+* **Windows** (se `pip` ou `pyrpa` não for reconhecido): use `python -m pip install pyrpa-framework` e depois `python -m pyrpa doctor` (ou abra um novo terminal).
+* **Linux / Ubuntu 23.04+ / 24.04+** (se der erro `externally-managed-environment`): use `pip3 install --break-system-packages pyrpa-framework` (se não tiver `pip3`, instale com `sudo apt update && sudo apt install -y python3-pip`).
+
+### Opção 2: Instalador Automático em Ambiente Virtual Isolado (`.venv`, via GitHub)
+
+Recomendado para quem deseja isolar as dependências em `.venv` ou desenvolver no repositório:
 
 * **No Windows (PowerShell ou CMD):**
   ```powershell

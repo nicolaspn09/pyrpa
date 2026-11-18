@@ -37,13 +37,13 @@ O **`pyrpa`** resolve esse problema através da **padronização arquitetural ob
 ### Opção 1: Instalador Automático (Mais Simples — Recomendado)
 
 #### 🐧 Linux / Ubuntu / macOS
-Evita automaticamente o erro `externally-managed-environment` (PEP 668) do Ubuntu 24.04+ criando o `.venv` e registrando o comando global:
+Cria um ambiente isolado automaticamente (evitando erros de permissão do Ubuntu) e configura o comando `pyrpa`:
 ```bash
 git clone https://github.com/nicolaspn09/pyrpa.git
 cd pyrpa
 bash instalar.sh
 ```
-*(Se no Ubuntu aparecer aviso de módulo `venv` ausente, instale antes: `sudo apt update && sudo apt install -y python3 python3-pip python3-venv`).*
+*(Se aparecer aviso de módulo `venv` faltando no Ubuntu, rode antes: `sudo apt update && sudo apt install -y python3 python3-pip python3-venv`).*
 
 #### 🪟 Windows (PowerShell ou Prompt de Comando)
 ```powershell

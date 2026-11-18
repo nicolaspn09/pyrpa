@@ -19,6 +19,40 @@ O **`pyrpa`** é um framework opinativo em Python (>= 3.10) projetado para resol
 
 ---
 
+### Instalação (Windows, Linux/Ubuntu e macOS)
+
+> **Pré-requisito:** Python **3.10 ou superior**.  
+> **Importante:** Nunca use `pip install pyrpa` sem o endereço do GitHub — esse nome no PyPI pertence a outro projeto.
+
+### Opção Recomendada (Instalador Automático em 1 Comando)
+
+* **No Windows (PowerShell ou CMD):**
+  ```powershell
+  git clone https://github.com/nicolaspn09/pyrpa.git
+  cd pyrpa
+  .\instalar.bat
+  ```
+* **No Linux / Ubuntu / macOS:**
+  ```bash
+  git clone https://github.com/nicolaspn09/pyrpa.git
+  cd pyrpa
+  bash instalar.sh
+  ```
+
+### Alternativa Manual com Ambiente Virtual (`.venv`)
+```bash
+python3 -m venv .venv
+# Ativar no Linux/Mac: source .venv/bin/activate
+# Ativar no Windows:  .\.venv\Scripts\Activate.ps1
+pip install --upgrade pip setuptools wheel
+pip install git+https://github.com/nicolaspn09/pyrpa.git
+pyrpa doctor
+```
+
+*(Dica: se o terminal não reconhecer `pyrpa` direto, use `python -m pyrpa doctor` ou `python3 -m pyrpa doctor`).*
+
+---
+
 ## 2. Guia de Comandos e Opções da CLI
 
 A CLI do `pyrpa` foi desenhada para ser intuitiva, rápida e totalmente em português. Ela suporta tanto subcomandos diretos quanto flags com traço duplo (`--`), atendendo a diferentes preferências de digitação.
